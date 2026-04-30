@@ -3,6 +3,11 @@ node_modules/
 .pnp
 .pnp.js
 
+# Compiled output
+dist/
+.pnp
+.pnp.js
+
 # Build outputs
 dist/
 build/

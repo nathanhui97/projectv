@@ -1,0 +1,29 @@
+{
+  "name": "@project-v/engine",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "dev": "tsc --watch --preserveWatchOutput"
+  },
+  "dependencies": {
+    "@project-v/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "2.0.5",
+    "typescript": "5.4.5",
+    "vitest": "2.0.5"
+  }
+}

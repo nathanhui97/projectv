@@ -1,0 +1,16 @@
+{
+  "name": "@project-v/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "expo start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@project-v/engine": "workspace:*",
+    "@project-v/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.4.5"
+  }
+}
