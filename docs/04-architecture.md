@@ -6,9 +6,9 @@ The big picture. How the pieces fit together. The non-negotiable design decision
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    MOBILE APP (React Native)                     │
-│  - Renders UI                                                    │
-│  - Handles user input                                            │
+│                    WEB APP (Next.js)                             │
+│  - Renders UI (Server + Client Components)                       │
+│  - Handles user input (click, drag via dnd-kit)                  │
 │  - Syncs game state via Supabase Realtime                        │
 │  - Imports engine and schemas                                    │
 └────────────────┬────────────────────────────────┬───────────────┘
@@ -70,11 +70,11 @@ The engine runs identically in:
 
 This is why deterministic engines matter. Same input → same output. Always.
 
-### Mobile app and admin portal are clients of engine + schemas
+### Web app and admin portal are clients of engine + schemas
 
 Both apps import the engine and schemas as packages. Neither has its own copy of game logic. Neither has its own type definitions for cards.
 
-If you find yourself writing rules logic in the mobile app, stop — it belongs in the engine.
+If you find yourself writing rules logic in the web app, stop — it belongs in the engine.
 
 If you find yourself writing card type definitions in the admin portal, stop — they belong in the schemas package.
 
@@ -83,9 +83,9 @@ If you find yourself writing card type definitions in the admin portal, stop —
 Supabase doesn't run rules. It stores data and broadcasts changes. The flow during a match:
 
 1. Player A taps "Deploy this unit"
-2. Mobile app validates the action against the engine: `canDeploy(state, action) === true`
-3. Mobile app applies the action locally: `state = apply(state, action)`
-4. Mobile app writes the action to Supabase
+2. Web app validates the action against the engine: `canDeploy(state, action) === true`
+3. Web app applies the action locally: `state = apply(state, action)`
+4. Web app writes the action to Supabase
 5. Supabase broadcasts the action to Player B via Realtime
 6. Player B's app receives the action
 7. Player B's app applies the same action: `state = apply(state, action)`
@@ -198,7 +198,7 @@ Admin clicks "Publish"
    ↓
 Status updated to 'published'
    ↓
-Mobile app's next sync pulls the new card
+Web app's next data fetch pulls the new card
    ↓
 Card appears in deck builder and is playable
 ```
@@ -208,19 +208,19 @@ No app release. No code change. Pure data flow.
 ## Data flow: a player action during a match
 
 ```
-Player A taps "Attack with this Unit"
+Player A clicks / drags "Attack with this Unit"
    ↓
-Mobile app calls engine: canAct(state, { type: 'declare_attack', unit_id, target_id })
+Web app calls engine: canAct(state, { type: 'declare_attack', unit_id, target_id })
    ↓
 Engine validates: is it main phase? is unit ready? is target valid? etc.
    ↓
 If valid: engine produces newState
    ↓
-Mobile app updates local state (Zustand store)
+Web app updates local state (Zustand store)
    ↓
 UI re-renders to reflect new state
    ↓
-Mobile app inserts action into Supabase `match_actions` table
+Web app inserts action into Supabase `match_actions` table
    ↓
 Supabase Realtime broadcasts to Player B
    ↓
@@ -293,11 +293,11 @@ No logic, no I/O, no React. Just data definitions.
 - Keyword behavior implementations (Repair, Blocker, First Strike, etc.)
 - Pure functions only. No side effects. No I/O.
 
-### `apps/mobile`
+### `apps/web`
 
-- All UI screens
+- All UI pages and components
 - Zustand stores (game state mirror, deck list, user)
-- Supabase client setup
+- Supabase client setup (browser + server clients via @supabase/ssr)
 - Network sync layer (writes to and subscribes to `match_actions`)
 - Imports engine and schemas
 - No game logic of its own
@@ -315,7 +315,7 @@ No logic, no I/O, no React. Just data definitions.
 
 - **Hardcoded card data.** Cards live in the database, not in code.
 - **Hardcoded rules.** Rules live in the engine; cards' specific behaviors live in their data.
-- **Duplicated types.** Each entity is defined once in `schemas`. If you find yourself redefining `Card` in the mobile app, that's a bug.
+- **Duplicated types.** Each entity is defined once in `schemas`. If you find yourself redefining `Card` in the web app, that's a bug.
 
 ## Determinism: the cardinal rule
 
@@ -362,12 +362,12 @@ If determinism is broken, syncing breaks. Treat any non-determinism in the engin
 When working on architecture-level decisions with an AI tool, paste this with `04-architecture.md`:
 
 ```
-I'm building a mobile TCG simulator with the architecture described in @04-architecture.md.
+I'm building a web TCG simulator with the architecture described in @04-architecture.md.
 
 The non-negotiables are:
 - Schemas are the single source of truth (Zod)
 - Engine is pure TypeScript, deterministic, framework-free
-- Mobile and admin both import engine + schemas
+- Web app and admin both import engine + schemas
 - Card data is in Supabase, never hardcoded
 - Sync via actions, not state
 

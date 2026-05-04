@@ -10,7 +10,7 @@ A fan-built, free, takedown-responsive tool that helps players test decks and pl
 
 ### What we never do
 
-- **Use "Gundam" or any Bandai trademark in the app name.** App Store listing is neutral.
+- **Use "Gundam" or any Bandai trademark in the app name or domain.** The site name and URL are neutral.
 - **Use Bandai logos, official font, or trade dress in marketing.** Our visual design is distinct.
 - **Monetize.** No paid tier, no IAP, no ads, no Patreon-for-Gundam-content. Zero revenue tied to their IP in v1.
 - **Compete commercially with an official Bandai product.** If Bandai launches an official digital game, we re-evaluate posture immediately.
@@ -26,11 +26,13 @@ A fan-built, free, takedown-responsive tool that helps players test decks and pl
 
 These are the things that keep us alive if Bandai ever notices:
 
-1. **No trademark in branding.** Without "Gundam" in our App Store listing, automated trademark scanners don't find us. Manual complaint required.
+1. **No trademark in branding.** Without "Gundam" in our domain or app name, automated trademark scanners don't find us. Manual complaint required.
 2. **No monetization.** Damages calculation is zero. Nuisance to sue.
 3. **DMCA-responsive.** Public takedown email, 24-hour response SLA. We comply on first request without fighting.
 4. **Community goodwill.** Users defend us publicly. Every Discord ping organizers post is reputation insurance.
-5. **Plan B architecture.** Engine and admin portal are designed to operate with zero hosted IP. If we have to strip card art and names, we can — see [§ Plan B](#plan-b-stripped-mode).
+5. **No app store gatekeeper.** Web deployment means no Apple or Google middleman who can unilaterally pull the app. We control the server.
+6. **Instant takedown capability.** If we need to go dark, we can Vercel-rollback or flip Plan B in minutes, not days. No app store review cycle standing in the way.
+7. **Plan B architecture.** Engine and admin portal are designed to operate with zero hosted IP. If we have to strip card art and names, we can — see [§ Plan B](#plan-b-stripped-mode).
 
 ### Plan B: stripped mode
 
@@ -58,13 +60,13 @@ This is why all card data is fetched dynamically and nothing is bundled in the a
 - Selling user data
 - Charging for access to specific cards or sets
 
-## What's hot-updatable vs requires app release
+## What's hot-updatable vs requires a deploy
 
-This is the most important architectural commitment in the project. Card-related changes must NEVER require an app release.
+On web, all code changes go live via a Vercel deploy (minutes, not days). The meaningful distinction is now between **pure data changes** (zero deploy needed, instant) and **engine/code changes** (require a Vercel redeploy, still fast — no app store review).
 
-### Hot-updatable (no app release needed)
+### Hot-updatable (no deploy needed)
 
-These flow through the admin portal → Supabase → mobile app at next sync:
+These flow through the admin portal → Supabase → web app at next page load or sync:
 
 - ✅ New cards (full data: name, art, stats, traits, abilities, rules text)
 - ✅ Card errata (modify any field on an existing card)
@@ -75,30 +77,30 @@ These flow through the admin portal → Supabase → mobile app at next sync:
 - ✅ FAQ entries / rules clarifications shown in-app
 - ✅ Feature flags (toggle Plan B mode, beta features)
 
-### Requires app release (1–7 day Apple review)
+### Requires a Vercel deploy (minutes, automatic via CI)
 
-These are engine-level and ship with the binary:
+These are engine-level or code-level and require a new deployment:
 
-- ❌ New trigger types (e.g., a brand-new mechanic Bandai invents)
-- ❌ New action types (e.g., "look at opponent's hand" if not pre-supported)
-- ❌ New zone types (extremely unlikely, but possible)
-- ❌ Core engine bugs / fixes
-- ❌ UI / UX changes
-- ❌ Network protocol changes
-- ❌ Auth changes
+- ⚡ New trigger types (e.g., a brand-new mechanic Bandai invents)
+- ⚡ New action types (e.g., "look at opponent's hand" if not pre-supported)
+- ⚡ New zone types (extremely unlikely, but possible)
+- ⚡ Core engine bug fixes
+- ⚡ UI / UX changes
+- ⚡ Network protocol changes
+- ⚡ Auth changes
 
-### Implication: vocabulary breadth matters at launch
+Unlike mobile, these changes reach every user the moment the deploy completes. No user action required.
 
-Because new trigger/action types require app releases, we need to build the effect vocabulary to be **comprehensive at launch**, anticipating mechanics Bandai *might* introduce. See [05-effect-vocabulary.md](05-effect-vocabulary.md) for the full list.
+### Implication: vocabulary breadth still matters at launch
 
-If we miss a primitive and Bandai prints a card needing it, that card is unplayable until we ship an app update. Acceptable but unpleasant. Mitigation: the manual-mode fallback (see [08-rules-engine.md](08-rules-engine.md)) lets such cards be played with manual resolution while we ship the engine update.
+Even though deploys are fast, we want the effect vocabulary to be **comprehensive at launch** so we don't need mid-season engine patches. If we miss a primitive, cards using it fall back to manual-resolve mode until we ship the fix. See [05-effect-vocabulary.md](05-effect-vocabulary.md) for the full list.
 
 ## Communication posture
 
 ### Public-facing
 
-- **App Store description:** neutral, mentions "card game simulator," does not claim to be the Gundam Card Game.
-- **App icon:** original design, no Bandai assets.
+- **Landing page / meta description:** neutral, mentions "card game simulator," does not claim to be the Gundam Card Game.
+- **Favicon / logo:** original design, no Bandai assets.
 - **Marketing copy on Discord/Twitter:** describe as a fan tool, never as "the Gundam app."
 - **No comparisons to official products in promotional language.**
 
@@ -116,10 +118,10 @@ Whether C&D, partnership inquiry, or anything else: **respond within 24 hours, a
 
 ## Distribution posture
 
-- **App Store and Google Play.** Submit to both. Be ready for Apple review questions about content / IP — have neutral answers prepared.
-- **No web version in v1.** Reduces attack surface for IP complaints.
-- **No direct APK / sideload distribution.** Stay on official stores; sideloading attracts the wrong crowd.
-- **TestFlight beta** for community testing before public launch.
+- **Web-only for v1.** Deploy to Vercel. A simple URL — no app store submission, no review cycle, no gatekeeper.
+- **Staging URL** for community beta testing before public launch. Password-protect or invite-only via Supabase RLS.
+- **No native app distribution in v1.** No APK, no TestFlight, no App Store. Mobile users access via their phone browser.
+- **Domain choice:** avoid "gundam" in the domain. Neutral name only.
 
 ## Community posture
 

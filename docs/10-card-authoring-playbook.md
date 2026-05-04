@@ -58,7 +58,7 @@ Once all cards in the set are authored:
 2. Verify all cards are `draft` (not still in progress)
 3. Click "Publish set"
 4. Atomically flip all cards to `published`
-5. Card data is now live; mobile app users see new cards on their next sync
+5. Card data is now live; web app users see new cards on their next page load or data refresh
 
 ### 5. Announce to the community
 
@@ -247,7 +247,7 @@ When Bandai issues errata to a card:
 4. New version has fresh edit fields
 5. Make the changes (rules text, effects, stats — whatever changed)
 6. Save draft, test, publish
-7. Mobile app's next sync: replays of old matches still use old version; new decks built use new version
+7. Web app's next data fetch: replays of old matches still use old version; new decks built use new version
 
 For format-level changes (banning a card):
 

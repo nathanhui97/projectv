@@ -362,7 +362,7 @@ Mostly for verifying card behavior end-to-end.
 
 ### Version
 
-Shows current `card_data_version`. Allows manual bump (used after big content updates if you want to force mobile clients to refetch).
+Shows current `card_data_version`. Allows manual bump (used after big content updates if you want to force web app clients to refetch).
 
 ### Errata
 
@@ -409,6 +409,6 @@ When ready to build the admin portal, paste this into Claude Code along with thi
 >
 > Use shadcn/ui components throughout (DataTable, Form, Dialog, Sheet, Combobox). Tailwind for layout. TanStack Query for all Supabase fetches.
 >
-> Do NOT yet implement: card image processing pipeline (separate script), multiplayer match UI (mobile concern).
+> Do NOT yet implement: card image processing pipeline (separate script), multiplayer match UI (player-facing web app concern).
 >
 > When in doubt about UX, prioritize: form clarity, validation feedback, and live preview accuracy.

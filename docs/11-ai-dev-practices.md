@@ -45,7 +45,7 @@ Use only for the AI auto-fill feature in the admin portal. Don't use the API dir
 ### Always provide context
 
 Bad: "Add a deck builder."
-Good: "Following /docs/09-mobile-app-spec.md (attached), implement the deck editor screen. Use the schemas from /packages/schema/deck.ts."
+Good: "Following /docs/09-web-app.md (attached), implement the deck editor page. Use the schemas from /packages/schemas/deck.ts."
 
 The doc set is your context library. Reference it constantly.
 
@@ -94,7 +94,7 @@ This is where AI projects most often fail. You need tests, and you need to actua
 - /packages/engine: 90%+ line coverage. Engine bugs destroy player trust.
 - /packages/schema: schema definitions don't need tests, but parsing edge cases do
 - Admin portal: 60%+ on form validation, filter builder, condition builder
-- Mobile app: 40%+ on key flows (deck validation, action dispatching)
+- Web app: 40%+ on key flows (deck validation, action dispatching)
 
 ### Test types
 
@@ -182,7 +182,7 @@ git commit -m "feat(engine): implement deploy_unit action with cost validation"
 
 ### Tag releases
 
-When admin portal v1 is shipped, tag it: `admin-v1.0.0`. When mobile app submits to App Store: `mobile-v1.0.0`. Lets you track what was shipped when.
+When admin portal v1 is shipped, tag it: `admin-v1.0.0`. When web app goes live: `web-v1.0.0`. Lets you track what was shipped when.
 
 ## Debugging strategies
 
@@ -226,11 +226,11 @@ It's fine to do these manually. AI isn't a religion.
 
 ### Hallucinated APIs
 
-AI invents library functions. "Use the `expo-camera-secure` package" — nope, doesn't exist. Always verify.
+AI invents library functions. "Use the `next-supabase-realtime-hook` package" — nope, doesn't exist. Always verify against the actual library docs.
 
 ### Outdated patterns
 
-AI's training data may include old React Native, old Supabase patterns. If something looks weird, search the official docs.
+AI's training data may include old Next.js patterns (Pages Router vs App Router confusion), old Supabase auth patterns. If something looks weird, search the official docs.
 
 ### Plausibility over correctness
 
@@ -277,7 +277,7 @@ This is OK. By the end of this project, you'll be a much better engineer than yo
 
 If AI is stuck for more than 30 minutes on the same problem, get human eyes:
 
-- Post in a developer Discord (Expo, Supabase have active ones)
+- Post in a developer Discord (Next.js, Supabase have active ones)
 - Ask on Stack Overflow (real people, slower but more reliable)
 - Hire a freelance developer for a 1-hour consultation if it's blocking ($100–200 well spent)
 

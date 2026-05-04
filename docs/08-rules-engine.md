@@ -14,11 +14,11 @@ The rules engine is the brain. It takes a GameState and a player Action and prod
 ## Where the engine lives
 
 `/packages/engine` — pure TypeScript. Imported by:
-- Mobile app (runs locally during matches)
+- Web app (runs in the browser during matches)
 - Admin portal (runs in sandbox tester)
 - (v2) Edge Function for server-side authoritative play
 
-Can NOT import: React, React Native, Supabase client, anything platform-specific.
+Can NOT import: React, Supabase client, anything platform-specific. Pure TypeScript only.
 
 ## Public API
 
@@ -180,7 +180,7 @@ type PendingChoice = {
 };
 ```
 
-Mobile app sees this in state.pending_choices and renders a UI prompting the player. Player taps a choice. App calls `resolveChoice(state, response)`.
+The web app sees this in state.pending_choices and renders a UI prompting the player. Player clicks a choice. App calls `resolveChoice(state, response)`.
 
 ## Continuous effects
 
@@ -340,7 +340,7 @@ class SyncError extends EngineError {} // Multi-client desync detected
 class TimeoutError extends EngineError {} // Pending choice not resolved in time
 ```
 
-Mobile app catches these and shows user-friendly messages.
+The web app catches these and shows user-friendly messages.
 
 ## Performance
 
@@ -361,7 +361,7 @@ This is the escape hatch for cards too complex to auto-encode.
 
 ## Versioning
 
-Engine has a semver version. Bump on any change to public API or behavior. Mobile app's `engine_version` is checked against `metadata.engine_min_version`. If app is below min, force user to update.
+Engine has a semver version. Bump on any change to public API or behavior. The web app's `engine_version` is checked against `metadata.engine_min_version` on load. If the client's engine is below min, prompt to hard-refresh (forces the new Vercel deployment to load).
 
 ## Open questions / decisions
 

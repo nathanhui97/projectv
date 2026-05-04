@@ -2,7 +2,7 @@
 
 ## What we're building
 
-A mobile TCG simulator for the Gundam Card Game. Players download the app, build decks, and play 1v1 online matches with friends using room codes. The app enforces the rules so players never have to.
+A web TCG simulator for the Gundam Card Game. Players open the site in any browser, build decks, and play 1v1 online matches with friends using room codes. The app enforces the rules so players never have to.
 
 ## Who it's for
 
@@ -19,8 +19,8 @@ Not for:
 
 ### Flow 1: First-time user
 
-1. Download app from App Store or Play Store
-2. Open app → sign up with email
+1. Open a browser and go to the app URL
+2. Sign up with email
 3. See empty deck list → tap "New deck"
 4. Browse card catalog (search, filter by color/cost/trait)
 5. Build a 50-card deck + 10-card resource deck
@@ -73,7 +73,7 @@ These are deliberately deferred. The doc calls them out so you don't accidentall
 - ❌ Cosmetics, card sleeves, playmats
 - ❌ In-app purchases
 - ❌ Alt-art card scanning (deferred to v1.1+)
-- ❌ Web version (mobile only for v1)
+- ❌ Native mobile apps (iOS/Android) — web only for v1; works in mobile browser
 - ❌ Tablet-optimized layouts (works on tablets but not specifically tuned)
 - ❌ Team battle, battle royale, other multiplayer formats
 - ❌ Multiple languages (English only)
@@ -107,7 +107,7 @@ Operationalized as:
 - **Sync reliability:** dropped frames or desync events <1% of matches.
 - **Crash-free rate:** ≥99.5% of sessions.
 - **Card accuracy:** ≥99% of cards play correctly on first try (1% may have edge cases or use manual mode).
-- **Load time:** card catalog opens in <2 seconds on a mid-range phone.
+- **Load time:** card catalog opens in <2 seconds on a mid-range device / connection.
 
 Quantified user goals (loose, validation-style):
 
@@ -125,4 +125,4 @@ Quantified user goals (loose, validation-style):
 
 - **Solo developer, AI-assisted.** Architecture must be maintainable by one person reading the docs.
 - **No ongoing server cost beyond Supabase free/cheap tier.** If a feature requires expensive infrastructure, defer.
-- **Apple/Google compliance from day one.** No mechanic that gets us pulled.
+- **DMCA-responsive from day one.** No mechanic or content that's indefensible.

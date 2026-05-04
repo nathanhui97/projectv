@@ -22,9 +22,9 @@ If a feature isn't listed here AND isn't in `01-product-spec.md`, default to "ou
 ### Hot-seat / pass-and-play
 
 - **Why it's tempting**: lets one device demo two-player play; useful for trade shows
-- **Why we're cutting**: fundamentally different UX; doubles the screen design work
-- **Workaround**: two devices, room code, sit across from each other
-- **Possible v2**: yes, mostly a UI variation
+- **Why we're cutting**: fundamentally different UX; requires hiding each player's hand and state when handing the device over. Extra design complexity for a niche use case.
+- **Workaround**: two devices (or two browser tabs on different accounts), room code, sit across from each other
+- **Possible v2**: yes, medium effort
 
 ### AI opponents
 
@@ -50,9 +50,10 @@ If a feature isn't listed here AND isn't in `01-product-spec.md`, default to "ou
 ### Spectator mode
 
 - **Why it's tempting**: streaming, content creators, learning by watching
-- **Why we're cutting**: separate UI mode, requires careful state synchronization, and security (hidden cards must stay hidden)
+- **Why we're cutting**: hidden cards must stay hidden from the spectator view — requires a separate read-only state projection. Doable but non-trivial.
+- **Note**: web makes this significantly easier than mobile ever would (just a third browser tab with a read-only Realtime subscription). High priority for v1.1.
 - **Workaround**: players screen-share via Discord
-- **Possible v2**: yes
+- **Possible v2**: yes, and relatively straightforward on web
 
 ### Replays
 
@@ -146,14 +147,14 @@ If a feature isn't listed here AND isn't in `01-product-spec.md`, default to "ou
 
 ### Push notifications
 
-- **Why we're cutting**: requires APNs/FCM setup, notification permission flow, content design ("your friend is online", etc.). 1+ week of work for marginal v1 benefit.
+- **Why we're cutting**: requires Web Push API setup, service worker, notification permission flow, and content design. 1+ week of work for marginal v1 benefit.
 - **Possible v2**: yes, once we have features that need them (turn timer, friend online)
 
-### Background match continuation
+### Background tab match continuation
 
-- **Why we're cutting**: keeping match alive when app is backgrounded is iOS/Android-specific work
-- **Workaround**: app expects to be in foreground during matches
-- **Possible v2**: yes, with reconnect-on-resume
+- **Why we're cutting**: if a player switches browser tabs during a match, the Realtime subscription may disconnect (browser throttles background tabs). Reconnect-on-resume handles most cases.
+- **Workaround**: keep the game tab in foreground during matches; reconnect on return handles brief backgrounding
+- **Possible v2**: service worker keep-alive if this proves to be a real problem
 
 ### Voice commentary / sound effects pack
 
@@ -163,24 +164,19 @@ If a feature isn't listed here AND isn't in `01-product-spec.md`, default to "ou
 
 ## Platform features cut from v1
 
-### Web version
+### Native mobile apps (iOS/Android)
 
-- **Why it's tempting**: lets players play on desktop
-- **Why we're cutting**: doubles the surface area; React Native Web is a real option but the UX is significantly different
-- **Workaround**: mobile only
-- **Possible v2**: yes; React Native Web could work
+- **Why it's tempting**: App Store discoverability, push notifications, offline play, home screen icon
+- **Why we're cutting**: v1 is web-only. The game works in mobile browsers. Native apps require EAS Build, App Store review cycles, and a separate codebase or React Native port.
+- **Workaround**: mobile browser works fine for play; players can add the site to their home screen (PWA-style) as a workaround
+- **Possible v2**: yes; consider a Progressive Web App (PWA) manifest first before full native
 
-### Tablet-optimized UI
+### Tablet-specific UI
 
-- **Why it's tempting**: iPad players exist
-- **Why we're cutting**: tablet UI requires different layouts (landscape, two-column hand+board, etc.)
-- **Workaround**: app runs on iPad/large Android tablets but is sized as a phone app
-- **Possible v2**: yes; medium effort
-
-### Apple Watch / wearable companions
-
-- **Why we're cutting**: low ROI
-- **Possible v2**: never; not a fit for TCG
+- **Why it's tempting**: iPad/Android tablet layouts could be better
+- **Why we're cutting**: responsive design handles tablets adequately. A purpose-built tablet layout (landscape, two-column board) is extra design work.
+- **Workaround**: app is responsive and usable on tablets at the 768px+ breakpoint
+- **Possible v2**: yes; medium effort, especially for the match board
 
 ### Localization (non-English)
 
@@ -301,9 +297,11 @@ If a feature isn't listed here AND isn't in `01-product-spec.md`, default to "ou
 
 ## Legal / compliance features cut from v1
 
-### Cookie consent banners (web only — not relevant)
+### Full cookie consent management platform
 
-- N/A; mobile only
+- A simple "Accept / Decline" banner is in scope for v1 (see `09-web-app.md`). A full consent management platform (CMP) with granular per-category toggles, audit logs, and consent receipts is not.
+- **Workaround**: simple banner gates PostHog. That's enough for v1.
+- **Possible v2**: only if GDPR audit ever requires it
 
 ### GDPR / CCPA explicit data export tooling
 
@@ -311,10 +309,10 @@ If a feature isn't listed here AND isn't in `01-product-spec.md`, default to "ou
 - **Workaround**: support@ handles requests
 - **Possible v2**: automated tooling
 
-### Age verification beyond app store rating
+### Age verification
 
-- **Why we're cutting**: app store age rating (9+) is sufficient for v1
-- **Possible v2**: only if regulations require
+- **Why we're cutting**: web has no equivalent of App Store age rating. A disclaimer on signup ("This app is for players of the physical card game") is sufficient for v1.
+- **Possible v2**: only if regulations require it in specific markets
 
 ## Things that are tempting but never in scope
 

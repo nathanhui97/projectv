@@ -6,35 +6,36 @@ Exact stack, with rationale. The principle: pick boring, AI-fluent, and well-doc
 
 | Layer | Choice | Why |
 |---|---|---|
-| Language | TypeScript everywhere | One language across mobile, web, engine. Type safety is non-optional for a rules engine. |
-| Mobile framework | React Native + Expo | Cross-platform iOS/Android, massive AI training corpus, Expo handles deployment pain. |
-| Admin portal | Next.js 14+ (App Router) | Standard React stack, AI-fluent, fast to build CRUD. |
+| Language | TypeScript everywhere | One language across web app, admin portal, engine. Type safety is non-optional for a rules engine. |
+| Web app (player-facing) | Next.js 14+ (App Router) | Same as admin portal — one framework, two apps. SSR for fast initial load; ISR for card catalog. |
+| Admin portal | Next.js 14+ (App Router) | Standard React stack, AI-fluent, fast to build CRUD. Separate deployment, not publicly linked. |
 | Backend | Supabase | Postgres + auth + realtime + storage in one. Cheap. AI tools generate Supabase code well. |
 | Schema validation | Zod | Define schemas once, validate everywhere. Generates TypeScript types automatically. |
-| UI library (admin) | shadcn/ui + Tailwind | Copy-paste components, full control, beautiful defaults, AI-fluent. |
-| UI library (mobile) | React Native primitives + NativeWind | NativeWind = Tailwind for React Native. Consistent styling language with admin. |
+| UI library | shadcn/ui + Tailwind | Copy-paste components, full control, beautiful defaults, AI-fluent. Used in both apps. |
 | Rules engine | Pure TypeScript, no framework | Lives in `packages/engine`. Importable by both apps. Deterministic. |
 | Realtime sync | Supabase Realtime | Postgres-backed, simple, free tier handles thousands of concurrent matches. |
-| State management | Zustand (mobile), React state (admin) | Zustand is lightweight, AI-fluent, perfect for game state. |
-| Form library (admin) | React Hook Form + Zod resolver | Industry standard, generates from schemas. |
+| State management | Zustand | Lightweight, AI-fluent, perfect for game state in the web app. |
+| Form library | React Hook Form + Zod resolver | Industry standard, generates from schemas. Used in both apps. |
+| Drag-and-drop | dnd-kit | Modern, React-specific, accessible, works on desktop and mobile touch. Used for the match game board. |
+| Animations | framer-motion | Declarative, well-documented, excellent for card-game-style transitions. |
 | Monorepo tool | Turborepo + pnpm workspaces | Standard, well-documented, AI-fluent. |
-| Deployment (admin) | Vercel | Next.js native, free tier sufficient. |
-| Deployment (mobile) | Expo EAS Build + App Store / Play Store | Expo handles native builds; you don't touch Xcode. |
-| AI assist (in-app feature) | Anthropic API (Claude Sonnet) | For ability auto-fill from rules text. |
-| Error tracking | Sentry | Free tier, dead simple integration, catches crashes. |
-| Analytics (lightweight) | PostHog (cloud, free tier) | Privacy-friendly, self-host option later. |
+| Deployment | Vercel | Next.js native, free tier sufficient, automatic CI/CD from git push. Both apps deployed separately. |
+| AI assist (in-app feature) | Anthropic API (claude-opus-4-7) | For ability auto-fill from rules text. Server-side only in admin portal. |
+| Error tracking | Sentry | Free tier, @sentry/nextjs integration, catches server and client errors. |
+| Analytics (lightweight) | PostHog (cloud, free tier) | Privacy-friendly, self-host option later. `posthog-js` for the web app. |
 
 ## Why these specifically
 
-### Why React Native + Expo over Flutter
+### Why two separate Next.js apps instead of one
 
-- AI tools have far more React Native code in training data than Flutter
-- Expo abstracts away native code entirely — you never open Xcode or Android Studio for routine work
-- TypeScript-native; matches the rest of the stack
-- OTA updates for non-native changes (Expo Updates)
-- Larger ecosystem of libraries
+Admin portal and player-facing web app are kept as separate Vercel projects. The admin portal URL is not publicly linked anywhere. This gives a hard separation: players can never accidentally navigate to admin pages, and admin auth logic doesn't contaminate the player-facing codebase. They share the `engine` and `schemas` packages but have independent deployments and independent auth flows.
 
-Flutter is excellent technically but worse for AI-assisted dev today.
+### Why Next.js for the player-facing app
+
+- App Router gives SSR for fast first paint (card catalog pre-rendered)
+- Same framework as admin portal — one mental model, shared AI context
+- Server Components for data fetching, Client Components only where interactivity is needed
+- Vercel deployment is zero-config; automatic branch preview URLs for testing
 
 ### Why Supabase over Firebase
 
@@ -45,11 +46,9 @@ Flutter is excellent technically but worse for AI-assisted dev today.
 - Realtime is built-in (Postgres replication-based)
 - Storage included for card images
 
-Firebase would work, but Postgres is the better match for this data model.
-
 ### Why client-side engine
 
-Rules engine runs in TypeScript on each player's device. Server (Supabase) just relays state changes. Specifically:
+Rules engine runs in TypeScript in each player's browser. The server (Supabase) just relays state changes. Specifically:
 
 - ✅ Faster to build (no separate server to deploy/maintain)
 - ✅ Lower latency (no server round-trip for every action)
@@ -61,6 +60,15 @@ Trade-offs:
 - ❌ Both clients must agree on state. We use deterministic engine + checksums to detect desync; the room creator's state wins on conflict.
 
 Server-authoritative engine is a v2 conversation when we add ranked.
+
+### Why dnd-kit for drag-and-drop
+
+The game board requires dragging cards from hand to zones and between zones. dnd-kit is:
+- React-specific and hook-based — no class components, no legacy API
+- Actively maintained (2024 releases)
+- Accessible by default (keyboard + pointer + touch)
+- Works on mobile browsers without extra configuration
+- Composable — use only the sensors and modifiers you need
 
 ### Why Zod as the spine
 
@@ -79,43 +87,46 @@ export type Card = z.infer<typeof CardSchema>;
 
 This one definition gives you:
 - TypeScript types throughout the codebase
-- Runtime validation in the admin portal forms
+- Runtime validation in both portals
 - Runtime validation when the engine loads cards
-- Auto-generated form fields (via libraries like `@autoform/react`)
+- Auto-generated form fields
 
 When you add a field, all four places update. No drift.
 
 ### Why Turborepo + pnpm workspaces
 
 Monorepo because three packages share code:
-- Mobile app uses engine and schemas
+- Web app uses engine and schemas
 - Admin portal uses engine (for sandbox testing) and schemas
 - Engine uses schemas
 
 Without a monorepo, you'd publish packages to npm or copy files. With one, all three update together.
 
-Turborepo handles caching builds. pnpm workspaces handles linking local packages. Both well-documented and AI-fluent.
-
 ## Specific library choices
 
-### Mobile
+### Web app (player-facing)
 
 ```json
 {
-  "expo": "^51",
-  "react-native": "0.74.x (matched to Expo SDK)",
-  "expo-router": "^3 (file-based routing)",
+  "next": "^14 (App Router)",
+  "react": "^18",
+  "@supabase/ssr": "latest",
   "@supabase/supabase-js": "^2",
-  "zustand": "^4",
-  "nativewind": "^4",
-  "@tanstack/react-query": "^5 (data fetching/caching)",
+  "tailwindcss": "^3",
+  "@radix-ui/react-* (via shadcn/ui)": "latest",
   "react-hook-form": "^7",
   "zod": "^3",
   "@hookform/resolvers": "^3",
-  "react-native-mmkv": "^2 (local storage, fast)",
-  "expo-image": "latest (better than RN Image)",
-  "@sentry/react-native": "latest",
-  "posthog-react-native": "latest"
+  "@tanstack/react-query": "^5",
+  "zustand": "^4",
+  "@dnd-kit/core": "latest",
+  "@dnd-kit/sortable": "latest",
+  "@dnd-kit/utilities": "latest",
+  "framer-motion": "latest",
+  "lucide-react": "icons",
+  "sonner": "toasts",
+  "@sentry/nextjs": "latest",
+  "posthog-js": "latest"
 }
 ```
 
@@ -135,7 +146,7 @@ Turborepo handles caching builds. pnpm workspaces handles linking local packages
   "@tanstack/react-query": "^5",
   "lucide-react": "icons",
   "sonner": "toasts",
-  "@anthropic-ai/sdk": "^0.x (for AI auto-fill feature)"
+  "@anthropic-ai/sdk": "latest (for AI auto-fill feature)"
 }
 ```
 
@@ -168,17 +179,26 @@ Even more minimal:
 ```
 [APP_NAME]/
 ├── apps/
-│   ├── mobile/                    # Expo app
-│   │   ├── app/                   # Expo Router screens
+│   ├── web/                       # Next.js player-facing app
+│   │   ├── app/                   # App Router pages
 │   │   │   ├── (auth)/
+│   │   │   │   ├── login/
+│   │   │   │   └── signup/
 │   │   │   ├── (main)/
-│   │   │   ├── match/[code].tsx
-│   │   │   └── _layout.tsx
+│   │   │   │   ├── play/
+│   │   │   │   │   └── [matchId]/
+│   │   │   │   ├── decks/
+│   │   │   │   │   └── [deckId]/
+│   │   │   │   ├── cards/
+│   │   │   │   │   └── [cardId]/
+│   │   │   │   ├── history/
+│   │   │   │   └── profile/
+│   │   │   └── layout.tsx
 │   │   ├── components/
 │   │   ├── lib/
 │   │   ├── stores/                # Zustand stores
 │   │   └── package.json
-│   └── admin/                     # Next.js portal
+│   └── admin/                     # Next.js admin portal (separate deployment)
 │       ├── app/                   # App Router pages
 │       │   ├── (auth)/
 │       │   ├── cards/
@@ -206,7 +226,7 @@ Even more minimal:
 │   │   │   ├── game-state.ts
 │   │   │   └── index.ts
 │   │   └── package.json
-│   └── ui/                        # Shared UI (later)
+│   └── ui/                        # Shared UI (later, if needed)
 ├── supabase/
 │   ├── migrations/
 │   └── seed.sql
@@ -225,34 +245,34 @@ Even more minimal:
 
 ## Environment variables
 
-You'll need:
-
 ```
-# Mobile and admin
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
+# Web app and admin (server-side)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 # Admin only
-SUPABASE_SERVICE_ROLE_KEY=    # server-side, NEVER ship to mobile
+SUPABASE_SERVICE_ROLE_KEY=    # server-side, NEVER expose to browser
 ANTHROPIC_API_KEY=             # for AI auto-fill, server-side only
 
-# Both, for error tracking
+# Both apps, for error tracking
 SENTRY_DSN=
-POSTHOG_API_KEY=
+NEXT_PUBLIC_POSTHOG_KEY=
 ```
 
-Use Expo's env handling for mobile, Vercel env for admin. Never commit `.env` files. The repo includes a `.env.example` with empty values.
+Use Vercel's environment variable settings for both apps. Never commit `.env` files. The repo includes a `.env.example` with empty values.
 
 ## Things explicitly NOT in the stack
 
+- ❌ React Native, Expo, Expo Router — web only for v1
+- ❌ NativeWind — use plain Tailwind
+- ❌ EAS Build, App Store Connect, Play Console — no native app
+- ❌ MMKV, AsyncStorage — use browser localStorage / Zustand persist
 - ❌ Redux, MobX, Recoil — Zustand is enough
 - ❌ GraphQL — Supabase REST + RPC is sufficient
 - ❌ tRPC — overkill, adds complexity
 - ❌ Prisma — Supabase migrations handle the schema
 - ❌ A separate game server (Node.js, Colyseus, etc.) — client-side engine in v1
 - ❌ Custom WebSocket layer — Supabase Realtime
-- ❌ Native modules / Swift / Kotlin — Expo managed workflow only
-- ❌ A "design system" package — shadcn/NativeWind is enough
 - ❌ Storybook — diminishing returns for solo dev with AI assist
 - ❌ Microservices — one Supabase project, two apps, three packages
 

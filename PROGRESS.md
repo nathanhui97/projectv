@@ -21,8 +21,8 @@
 
 ---
 
-## Week 2 — Admin Portal Card Editor 🔄 IN PROGRESS
-**Goal:** Full card editor UI, trait management, 10 authored cards.
+## Week 2 — Admin Portal Card Editor ✅ DONE
+**Goal:** Full card editor UI, AI auto-fill, save/publish workflow.
 
 ### Completed
 - Next.js 14 + Tailwind + shadcn CSS vars scaffolded in `apps/admin`
@@ -32,22 +32,43 @@
 - Sidebar nav layout (Cards, Traits, Sets, Sandbox)
 - `/cards` list page — search by name, filter by status (draft/published/archived)
 - Sign-out API route
-- Build compiles clean
+- `/cards/[id]` card editor — full form with 3-column layout
+  - Basic info (name, type, color, rarity, set, card number, cost, flavor)
+  - Stats (conditional: AP/HP/Level for units, modifier fields for pilots, cost for commands)
+  - Traits multi-select with chip UI + autocomplete
+  - Keywords with optional amount (repair/breach)
+  - Abilities builder (trigger, qualifiers, cost, steps)
+  - Image upload to `card-art` Supabase bucket
+  - Draft / Publish / Archive workflow
+  - Live card preview sidebar
+- `/api/cards` POST — create new card
+- `/api/cards/[id]` PUT — update card, increment version
+- `/api/cards/upload-art` POST — upload card image
+- `/api/cards/ai-fill` POST — AI rules text → abilities (claude-opus-4-7, adaptive thinking, structured JSON output)
+- Build compiles clean (verified)
 
-### TODO
-- [ ] `/cards/new` + `/cards/[id]` — card editor page
-  - [ ] Basic info (name, type, color, rarity, set, cost)
-  - [ ] Combat stats (AP, HP, BP)
-  - [ ] Pilot fields (link conditions, pilot modifiers)
-  - [ ] Traits multi-select
-  - [ ] Keywords checkboxes
-  - [ ] Abilities builder (trigger → steps)
-  - [ ] Image upload to `card-art` bucket
-  - [ ] Draft / Publish workflow
-- [ ] `/api/cards/ai-fill` — AI auto-fill route (rules text → AbilitySchema)
+### TODO (non-blocking)
 - [ ] `/traits` — trait dictionary management page
 - [ ] `renderAbilityToText()` in `packages/engine`
-- [ ] Author 10 test cards to validate the form
+- [ ] Author 10 test cards to validate the form end-to-end
+
+---
+
+## PIVOT — Web-first (2026-05-04)
+**Decision:** Switched from React Native + Expo mobile app to Next.js web app (`apps/web`).
+
+### Rationale
+- Faster deploys (no app store review)
+- No Apple/Google gatekeeper who can pull the app
+- Zero platform fragmentation
+- Players on any device via browser
+
+### Docs updated
+- All 13 docs + BUILD-ORDER.md updated to reflect web-first
+- `docs/09-mobile-app.md` → renamed and rewritten as `docs/09-web-app.md`
+- `apps/mobile` → `apps/web` throughout
+- React Native, Expo, NativeWind, EAS Build, TestFlight all removed from stack
+- Added: dnd-kit (drag-and-drop), framer-motion (animations)
 
 ---
 
@@ -91,40 +112,45 @@
 
 ---
 
-## Week 6 — Mobile App Shell + Deck Builder ⏳ NOT STARTED
-**Goal:** Expo app, auth, card browser, deck builder.
+## Week 6 — Web App Shell + Deck Builder ⏳ NOT STARTED
+**Goal:** Next.js web app, auth, card browser, deck builder.
 
 ### TODO
-- [ ] Expo + Expo Router scaffold in `apps/mobile`
-- [ ] Supabase auth (email/password)
-- [ ] Cards tab (browse, search, filter)
-- [ ] Decks tab (create, edit, 50+10 validation)
-- [ ] Profile + History tabs (shells)
+- [ ] Next.js App Router scaffold in `apps/web`
+- [ ] Supabase auth (email/password), middleware route guards
+- [ ] Cards section (browse, search, filter — virtualized)
+- [ ] Decks section (create, edit, 50+10 validation)
+- [ ] Profile + History sections (shells)
+- [ ] Responsive nav (sidebar desktop, bottom bar mobile)
 
 ---
 
-## Week 7 — Mobile Match Flow ⏳ NOT STARTED
-**Goal:** Full 1v1 match playable end-to-end.
+## Week 7 — Web App Match Flow ⏳ NOT STARTED
+**Goal:** Full 1v1 match playable in browser end-to-end.
 
 ### TODO
 - [ ] Lobby (create room → 6-char code, join room)
 - [ ] Supabase Realtime action sync
-- [ ] Match screen layout (field, hand, resources, action bar)
-- [ ] Touch interactions (tap preview, long-press deploy, tap attack)
+- [ ] Match board layout (all zones, hand, action bar, responsive)
+- [ ] Click + dnd-kit drag interactions
 - [ ] Engine integration
+- [ ] Pending choice modals
+- [ ] framer-motion animations
 - [ ] Desync detection (checksum)
 
 ---
 
-## Week 8 — Polish + App Store ⏳ NOT STARTED
-**Goal:** Ship to TestFlight + Play Store internal testing.
+## Week 8 — Polish + Launch ⏳ NOT STARTED
+**Goal:** Ship to prod URL, community beta.
 
 ### TODO
 - [ ] Bug fixes from playtesting
-- [ ] Animations (Reanimated)
-- [ ] App icons, splash screen
-- [ ] EAS Build config
-- [ ] App Store + Play Store submission
+- [ ] Animation polish (framer-motion)
+- [ ] Cookie consent banner
+- [ ] Settings page
+- [ ] Community beta via staging URL (20-30 testers)
+- [ ] Production deploy → prod Vercel URL
+- [ ] Discord announcement
 
 ---
 
@@ -134,3 +160,4 @@
 - Git identity: `nathanhui97@gmail.com` / `Nathan Hui`
 - Supabase MCP has SSL auth issue — use Supabase dashboard directly for now
 - `apps/admin` dev server runs on port 3001 (`pnpm exec next dev --port 3001`)
+- Anthropic SDK updated to 0.92.0 (required for `thinking: {type: "adaptive"}` and `output_config`)

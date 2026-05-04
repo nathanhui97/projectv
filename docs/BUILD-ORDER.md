@@ -4,9 +4,9 @@ The build sequence with concrete deliverables. Follow this exactly, or you'll wa
 
 ## Guiding principle
 
-We build the foundation before the visible product. Schema → admin portal → cards → engine → mobile app. The mobile app is the *last* thing built because everything else has to exist first.
+We build the foundation before the visible product. Schema → admin portal → cards → engine → web app. The web app is the *last* thing built because everything else has to exist first.
 
-This feels backwards because the mobile app is the visible deliverable. Resist the urge to reorder. Trust the sequence.
+This feels backwards because the web app is the visible deliverable. Resist the urge to reorder. Trust the sequence.
 
 ## Phase 0: Validation (Week 0, before committing to the full build)
 
@@ -22,10 +22,10 @@ Before spending 8+ weeks building, get signal that your local TCG community actu
 
 ### Deliverables
 
-1. **Validation prototype** — a single Expo screen with:
+1. **Validation prototype** — a single Next.js page with:
    - 10 hardcoded cards from ST01 (or whichever deck you know best)
    - Visual layout of zones (battle area, hand, shield area, etc.)
-   - Drag-and-drop card placement (no rules enforcement, just movement)
+   - Drag-and-drop card placement with dnd-kit (no rules enforcement, just movement)
    - This is throwaway code — it does not become part of the real codebase
 2. **Demo session** with 5–10 community members on Discord, in person, or both
 3. **Decision gate**:
@@ -47,7 +47,7 @@ You have a yes/no/pivot answer from real people who play this game. If GO, proce
 ### Deliverables
 
 1. **Effect vocabulary review** — go through 30+ real cards from ST01–GD01 and verify every effect can be expressed in the vocabulary from `05-effect-vocabulary.md`. Add primitives if needed. This is the most important QA work in the project.
-2. **Monorepo scaffolded** with `/apps/mobile`, `/apps/admin`, `/packages/engine`, `/packages/schemas`, `/supabase`, `/docs`. Empty stubs in each package.
+2. **Monorepo scaffolded** with `/apps/web`, `/apps/admin`, `/packages/engine`, `/packages/schemas`, `/supabase`, `/docs`. Empty stubs in each package.
 3. **Supabase projects created**: `dev` and `prod` (both on free tier).
 4. **Schemas implemented** in `/packages/schemas`: primitives, filter, condition, trigger, action, ability, card, deck, game-state, match-action, user.
 5. **DB migrations written** for all tables in `06-data-schemas.md`. Applied to dev.
@@ -166,72 +166,74 @@ This week is mostly volume work. AI auto-fill speeds it up dramatically. Plan: 1
 
 600 cards published in DB. Sandbox tester runs without errors on randomly sampled cards. Trait dictionary is clean (no duplicate / typo'd traits).
 
-## Week 6: Mobile app shell + deck builder
+## Week 6: Web app shell + deck builder
 
 ### Goals
 
-- App scaffolding, auth, deck builder
+- Next.js web app scaffolding, auth, deck builder
 
 ### Deliverables
 
-1. **Expo project set up**, file routing, providers, theming
-2. **Auth flow**: splash, login, signup, route guards
-3. **Card data fetching** with version-check refetch
-4. **Decks tab fully functional**: list, editor, validation
-5. **Cards tab**: encyclopedia + detail
-6. **Profile tab**: stats placeholder, settings, sign out
-7. **History tab**: empty state for now
+1. **`apps/web` project set up** — App Router file structure, Tailwind, providers (Zustand, TanStack Query, Supabase)
+2. **Auth flow**: login, signup, middleware route guards, redirect logic
+3. **Card data fetching** with TanStack Query and version-check cache invalidation
+4. **Decks section fully functional**: list, editor with real-time validation
+5. **Cards section**: encyclopedia (virtualized grid) + card detail
+6. **Profile section**: stats placeholder, settings, sign out
+7. **History section**: empty state for now
+8. **Responsive nav**: sidebar on desktop, bottom nav on mobile
 
-Tested on TestFlight internal with 2–3 testers. Goal: testers can build and save valid decks.
+Shared via staging URL with 2–3 community testers. Goal: testers can open the URL, sign up, build a valid deck, and save it.
 
 ### Validation checkpoint at end of Week 6
 
-Two testers can independently install the app, sign up, build a 50-card deck, and save it. No crashes.
+Two testers can independently open the staging URL, sign up, build a 50-card deck, and save it. No errors.
 
-## Week 7: Mobile app match flow
+## Week 7: Web app match flow
 
 ### Goals
 
-- Multiplayer match end-to-end
+- Multiplayer match end-to-end in the browser
 
 ### Deliverables
 
-1. **Lobby UI**: create room, join room, waiting state
-2. **Match state subscription**: Realtime sync from Supabase
-3. **Match screen layout**: zones, hand, action bar
-4. **Touch interactions**: tap, long-press, drag-to-zone
-5. **Engine integration**: local action validation and application, sync state to DB
+1. **Lobby UI**: create room (copy code), join room (enter code), waiting state
+2. **Match state subscription**: Supabase Realtime sync
+3. **Match board layout**: all zones, hand, action bar — responsive
+4. **Click + drag interactions**: dnd-kit for card drag from hand to zones, unit-to-unit drag for attacks/pairing
+5. **Engine integration**: local action validation and application, action persisted to Supabase
 6. **Pending choice modals**
-7. **Animations** (basic — full polish in Week 8)
+7. **Animations** with framer-motion (basic — full polish in Week 8)
 8. **Win/loss summary screen**
-9. **Match log added to History tab**
+9. **Match log added to History section**
 
 ### Validation checkpoint at end of Week 7
 
 Two testers can join a match via room code and play a complete game from start to win condition. No desyncs.
 
-## Week 8: Polish, beta, submission
+## Week 8: Polish, beta, launch
 
 ### Goals
 
 - Bug fixes
 - Polish animations
-- App Store / Play Store submission
+- Public launch (no app store review — deploy to prod when ready)
 
 ### Deliverables
 
 1. **Bug-fix sprint** — every issue from Weeks 6–7 testing
-2. **Animation polish** with Reanimated
+2. **Animation polish** with framer-motion
 3. **Sound effects** (optional, can defer)
 4. **Settings page**: sound, animations, account management
-5. **App Store assets**: icon, screenshots, description, takedown email
-6. **TestFlight beta** — invite 20–30 TCG community members
-7. **Bug fixes from beta**
-8. **App Store + Play Store submission**
+5. **Cookie consent banner** — gates PostHog on accept
+6. **Staging beta** — invite 20–30 TCG community members via staging URL
+7. **Bug fixes from beta feedback**
+8. **Production deploy** — merge to main, Vercel auto-deploys to prod URL
+9. **Announce in Discord**
 
 ### Validation checkpoint at end of Week 8
 
-App is in App Store / Play Store review queue. Confidence in quality is high. Beta testers report stable experience.
+Prod URL is live. Beta testers report stable experience. Cards play correctly. No known engine bugs.
 
 ## Post-launch: ongoing card authoring
 
@@ -268,19 +270,19 @@ Priority order — drop from the bottom if needed:
 11. (Nice) Match history with detailed log
 12. (Nice) Onboarding tutorial
 
-If at Week 8 you're not ready, ship without GD02–GD04 cards. Add them post-launch via admin portal (no app release needed!). This is the *whole point* of the data-driven architecture.
+If at Week 8 you're not ready, ship without GD02–GD04 cards. Add them post-launch via admin portal (no redeploy needed — pure data update!). This is the *whole point* of the data-driven architecture.
 
 ## Key implementation prompts (for vibe-coding)
 
 When you start each week, the relevant doc has an "Implementation prompt template" at the bottom. Copy that into Claude Code along with the doc(s).
 
 For Week 0: prompt in `03-tech-stack.md` (monorepo setup) and `04-architecture.md` (package layout)
-For Week 1 (validation prototype): use a one-shot prompt: "Build a minimal Expo single-screen app showing 10 cards in zones for hot-seat play with these 10 cards [paste data]. No engine, just visual layout."
+For Week 1 (validation prototype): use a one-shot prompt: "Build a minimal Next.js single page showing 10 cards in zones using dnd-kit for drag-and-drop, these 10 cards [paste data]. No engine, just visual layout."
 For Week 1 (admin portal start): prompt in `07-admin-portal-spec.md` (steps 1–3)
 For Week 2: prompt in `07-admin-portal-spec.md` (full)
 For Week 3–4: prompt in `08-rules-engine.md`
 For Week 5: pure card authoring; no new code
-For Week 6–7: prompt in `09-mobile-app.md`
+For Week 6–7: prompt in `09-web-app.md`
 For Week 8: bug fixes — no specific prompt, just fix what's broken
 
 ## Scope cuts available
@@ -299,7 +301,7 @@ Things that CANNOT be cut:
 - Multiplayer reliability
 - Deck builder validation
 - Admin portal flexibility
-- App Store / Play Store submission
+- Production deploy to the public URL
 
 ## Implementation prompt template
 
