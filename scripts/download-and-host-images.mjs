@@ -123,8 +123,15 @@ async function uploadImage(cardId, bytes, contentType) {
 // ─── Update art_url in DB ─────────────────────────────────────────────────────
 
 async function updateArtUrl(cardId, artUrl) {
-  // The card data is stored as jsonb in the `data` column
-  // We need to patch data->>'art_url' using Postgres jsonb merge
+  // Fetch existing data first, then merge — never replace the whole jsonb column
+  const getResp = await fetch(
+    `${REST}/cards?id=eq.${encodeURIComponent(cardId)}&select=data`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!getResp.ok) throw new Error(`DB fetch failed: ${await getResp.text()}`);
+  const [row] = await getResp.json();
+  const merged = { ...(row?.data ?? {}), art_url: artUrl };
+
   const resp = await fetch(`${REST}/cards?id=eq.${encodeURIComponent(cardId)}`, {
     method: "PATCH",
     headers: {
@@ -133,9 +140,7 @@ async function updateArtUrl(cardId, artUrl) {
       "Content-Type": "application/json",
       Prefer: "return=minimal",
     },
-    body: JSON.stringify({
-      data: { art_url: artUrl }, // Supabase merges jsonb on PATCH
-    }),
+    body: JSON.stringify({ data: merged }),
   });
 
   if (!resp.ok) throw new Error(`DB update failed: ${await resp.text()}`);
