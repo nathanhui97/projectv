@@ -30,6 +30,11 @@ out/
 # Supabase
 supabase/.branches/
 supabase/.temp/
+*.env.rtf
+
+# Claude Code internals
+.agents/
+skills-lock.json
 
 # TypeScript
 *.tsbuildinfo

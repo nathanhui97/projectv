@@ -2,11 +2,37 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
-    "lib": ["ES2020", "DOM"],
-    "plugins": [{ "name": "next" }],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
     "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist", ".next"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next.config.mjs",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next"
+  ]
 }
