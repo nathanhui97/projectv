@@ -9,6 +9,7 @@ export default function CardPreview({ values }: { values: CardFormValues }) {
     green: "bg-green-100 border-green-300",
     red: "bg-red-100 border-red-300",
     white: "bg-gray-100 border-gray-300",
+    purple: "bg-purple-100 border-purple-300",
   };
   const colorClass = values.color ? colorBg[values.color] : "bg-muted border-border";
 

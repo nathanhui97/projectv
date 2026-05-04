@@ -5,7 +5,7 @@ import type { CardFormValues } from "@/app/(admin)/cards/[id]/CardEditor";
 import { Field, FieldError, Select } from "./FormPrimitives";
 
 const CARD_TYPES = ["unit", "pilot", "command", "base", "resource", "token"] as const;
-const COLORS = ["blue", "green", "red", "white"] as const;
+const COLORS = ["blue", "green", "red", "white", "purple"] as const;
 const RARITIES = ["common", "uncommon", "rare", "super_rare", "legendary_rare", "promo"] as const;
 
 export default function BasicInfoSection() {

@@ -146,7 +146,7 @@ function mapColor(raw) {
   if (c === "green") return "green";
   if (c === "red") return "red";
   if (c === "white") return "white";
-  // Purple isn't in our schema yet — store as undefined and note in authoring_notes
+  if (c === "purple") return "purple";
   return undefined;
 }
 
@@ -266,11 +266,6 @@ async function parseDetail(cardId) {
     updated_at: now,
     authored_by: "scraper",
   };
-
-  // Note purple color (not in schema yet)
-  if (rawColor && rawColor.toLowerCase() === "purple") {
-    card.authoring_notes = `COLOR: Purple (not in schema yet). ${card.authoring_notes || ""}`.trim();
-  }
 
   return card;
 }

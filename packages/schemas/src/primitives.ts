@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const ColorSchema = z.enum(['blue', 'green', 'red', 'white']);
+export const ColorSchema = z.enum(['blue', 'green', 'red', 'white', 'purple']);
 export type Color = z.infer<typeof ColorSchema>;
 
 export const CardTypeSchema = z.enum([
