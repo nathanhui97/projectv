@@ -22,24 +22,24 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const BASE = "https://www.gundam-gcg.com/asia-en/cards";
-const IMG_BASE = "https://www.gundam-gcg.com/jp/images/cards/card";
+const BASE = "https://www.gundam-gcg.com/en/cards";
+const IMG_BASE = "https://www.gundam-gcg.com/en/images/cards/card";
 
 // All known set codes → package IDs
 const SET_MAP = {
-  ST01: "619001",
-  ST02: "619002",
-  ST03: "619003",
-  ST04: "619004",
-  ST05: "619005",
-  ST06: "619006",
-  ST07: "619007",
-  ST08: "619008",
-  ST09: "619009",
-  GD01: "619101",
-  GD02: "619102",
-  GD03: "619103",
-  GD04: "619104",
+  ST01: "616001",
+  ST02: "616002",
+  ST03: "616003",
+  ST04: "616004",
+  ST05: "616005",
+  ST06: "616006",
+  ST07: "616007",
+  ST08: "616008",
+  ST09: "616009",
+  GD01: "616101",
+  GD02: "616102",
+  GD03: "616103",
+  GD04: "616104",
 };
 
 const DELAY_MS = 300; // be polite — 300ms between requests
