@@ -73,6 +73,13 @@ export default function CardPreview({ values }: { values: CardFormValues }) {
           </div>
         )}
 
+        {/* Link condition */}
+        {values.type === "unit" && values.link_text && (
+          <p className="text-xs text-muted-foreground border-t pt-2">
+            <span className="font-medium">Link:</span> {values.link_text}
+          </p>
+        )}
+
         {/* Rules text */}
         {values.rules_text && (
           <p className="text-xs leading-relaxed border-t pt-2">{values.rules_text}</p>

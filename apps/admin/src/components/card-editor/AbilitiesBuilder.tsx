@@ -33,6 +33,22 @@ const STEP_ACTION_TYPES = [
   "manual_resolve", "noop",
 ] as const;
 
+const DURATION_OPTIONS = [
+  "end_of_turn",
+  "end_of_opponent_turn",
+  "until_end_of_phase",
+  "while_paired",
+  "while_in_zone",
+  "permanent",
+] as const;
+
+const SIDE_OPTIONS = ["friendly", "enemy", "any"] as const;
+const ZONE_OPTIONS = [
+  "battle_area", "hand", "deck", "resource_area",
+  "shield_area", "trash", "removed_from_game",
+] as const;
+const TYPE_OPTIONS = ["unit", "pilot", "command", "base", "resource"] as const;
+
 type Ability = {
   id: string;
   display_text: string;
@@ -377,6 +393,12 @@ function StepRow({
         )}
         {step.action === "modify_stat" && (
           <>
+            <input
+              value={(step.target as string) ?? ""}
+              onChange={(e) => onUpdate({ target: e.target.value || undefined })}
+              placeholder="Target: $var or $self"
+              className="input text-xs"
+            />
             <Select
               value={(step.stat as string) ?? "ap"}
               onChange={(e) => onUpdate({ stat: e.target.value })}
@@ -392,6 +414,14 @@ function StepRow({
               placeholder="±Amount"
               className="input"
             />
+            <Select
+              value={(step.duration as string) ?? "end_of_turn"}
+              onChange={(e) => onUpdate({ duration: e.target.value })}
+            >
+              {DURATION_OPTIONS.map((d) => (
+                <option key={d} value={d}>{d.replace(/_/g, " ")}</option>
+              ))}
+            </Select>
           </>
         )}
         {step.action === "gain_keyword" && (
@@ -410,6 +440,51 @@ function StepRow({
             onChange={(e) => onUpdate({ prompt_text: e.target.value })}
             placeholder="Prompt shown to players…"
             className="input col-span-2"
+          />
+        )}
+        {step.action === "all_matching" && (
+          <div className="col-span-2 grid grid-cols-3 gap-2">
+            <Select
+              value={(step.filter_side as string) ?? "friendly"}
+              onChange={(e) => onUpdate({ filter_side: e.target.value })}
+            >
+              {SIDE_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </Select>
+            <Select
+              value={(step.filter_zone as string) ?? "battle_area"}
+              onChange={(e) => onUpdate({ filter_zone: e.target.value })}
+            >
+              <option value="">any zone</option>
+              {ZONE_OPTIONS.map((z) => (
+                <option key={z} value={z}>{z.replace(/_/g, " ")}</option>
+              ))}
+            </Select>
+            <Select
+              value={(step.filter_type as string) ?? "unit"}
+              onChange={(e) => onUpdate({ filter_type: e.target.value })}
+            >
+              <option value="">any type</option>
+              {TYPE_OPTIONS.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </Select>
+            <input
+              value={(step.filter_traits as string) ?? ""}
+              onChange={(e) => onUpdate({ filter_traits: e.target.value || undefined })}
+              placeholder="traits: zeon,gundam (comma-sep)"
+              className="input text-xs col-span-3"
+            />
+          </div>
+        )}
+        {(step.action === "deal_damage" || step.action === "destroy" ||
+          step.action === "heal" || step.action === "rest" || step.action === "ready") && (
+          <input
+            value={(step.target as string) ?? ""}
+            onChange={(e) => onUpdate({ target: e.target.value || undefined })}
+            placeholder="Target: $var or $self"
+            className="input text-xs"
           />
         )}
       </div>

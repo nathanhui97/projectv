@@ -56,6 +56,17 @@ export default function StatsSection({ cardType }: { cardType: string }) {
       {!showCost && !showAP && !showHP && (
         <p className="text-sm text-muted-foreground italic">No stats for this card type.</p>
       )}
+      {isUnit && (
+        <div className="mt-4">
+          <Field label="Link condition" hint="Which pilot(s) can pair with this unit — e.g. [Amuro Ray]">
+            <input
+              {...register("link_text")}
+              placeholder="[Amuro Ray]"
+              className="input"
+            />
+          </Field>
+        </div>
+      )}
     </section>
   );
 }
