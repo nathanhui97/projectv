@@ -13,9 +13,7 @@ export default function BasicInfoSection() {
 
   return (
     <section>
-      <h2 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-        Basic Info
-      </h2>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Basic Info</p>
       <div className="grid grid-cols-2 gap-4">
         <Field label="Card ID" required error={errors.id?.message}>
           <input

@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Save, Globe, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import BasicInfoSection from "@/components/card-editor/BasicInfoSection";
 import StatsSection from "@/components/card-editor/StatsSection";
 import TraitsKeywordsSection from "@/components/card-editor/TraitsKeywordsSection";
@@ -16,7 +15,6 @@ import AbilitiesBuilder from "@/components/card-editor/AbilitiesBuilder";
 import ImageUpload from "@/components/card-editor/ImageUpload";
 import CardPreview from "@/components/card-editor/CardPreview";
 
-// Form schema — omits server-managed fields (id, created_at, etc.)
 const FormSchema = z.object({
   id: z.string().min(1, "Required"),
   set_code: z.string().min(1, "Required"),
@@ -117,7 +115,6 @@ export default function CardEditor({
   const isNew = card === null;
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"form" | "abilities">("form");
 
   const methods = useForm<CardFormValues>({
     resolver: zodResolver(FormSchema),
@@ -165,6 +162,7 @@ export default function CardEditor({
   return (
     <FormProvider {...methods}>
       <div className="flex flex-col h-full">
+
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-3 border-b bg-card shrink-0">
           <div className="flex items-center gap-3">
@@ -174,17 +172,11 @@ export default function CardEditor({
             <span className="font-medium text-sm">
               {isNew ? "New Card" : (formValues.name || card.id)}
             </span>
-            {!isNew && (
-              <StatusBadge status={card.status} />
-            )}
+            {!isNew && <StatusBadge status={card.status} />}
           </div>
           <div className="flex items-center gap-2">
-            {saveError && (
-              <span className="text-xs text-destructive">{saveError}</span>
-            )}
-            {hasErrors && (
-              <span className="text-xs text-destructive">Fix validation errors first</span>
-            )}
+            {saveError && <span className="text-xs text-destructive">{saveError}</span>}
+            {hasErrors && <span className="text-xs text-destructive">Fix validation errors first</span>}
             <button
               onClick={() => onSave("draft")}
               disabled={saving}
@@ -204,52 +196,55 @@ export default function CardEditor({
           </div>
         </div>
 
-        {/* 3-column body */}
+        {/* Body: scrollable form + sticky preview */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Left: image */}
-          <div className="w-64 border-r p-4 flex flex-col gap-4 overflow-y-auto shrink-0">
-            <ImageUpload cardId={formValues.id || "new"} />
-          </div>
 
-          {/* Center: form */}
+          {/* Main form — single scrolling column */}
           <div className="flex-1 overflow-y-auto">
-            {/* Tabs */}
-            <div className="flex border-b px-6">
-              {(["form", "abilities"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={cn(
-                    "px-4 py-2.5 text-sm capitalize border-b-2 -mb-px transition-colors",
-                    activeTab === tab
-                      ? "border-primary text-foreground font-medium"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {tab === "form" ? "Card Info" : "Abilities"}
-                </button>
-              ))}
-            </div>
+            <div className="px-8 py-6 space-y-0">
 
-            <div className="p-6 space-y-6 max-w-2xl">
-              {activeTab === "form" && (
-                <>
+              {/* ── Identity: image + basic fields ── */}
+              <div className="flex gap-8 pb-8">
+                <div className="w-40 shrink-0">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Art</p>
+                  <ImageUpload cardId={formValues.id || "new"} />
+                </div>
+                <div className="flex-1 min-w-0">
                   <BasicInfoSection />
-                  <StatsSection cardType={formValues.type} />
-                  <TraitsKeywordsSection traits={traits} />
-                  <RulesTextSection />
-                </>
-              )}
-              {activeTab === "abilities" && (
+                </div>
+              </div>
+
+              {/* ── Stats ── */}
+              <div className="border-t py-8">
+                <StatsSection cardType={formValues.type} />
+              </div>
+
+              {/* ── Traits & Keywords side by side ── */}
+              <div className="border-t py-8">
+                <TraitsKeywordsSection traits={traits} />
+              </div>
+
+              {/* ── Rules text ── */}
+              <div className="border-t py-8">
+                <RulesTextSection />
+              </div>
+
+              {/* ── Abilities ── */}
+              <div className="border-t py-8">
                 <AbilitiesBuilder />
-              )}
+              </div>
+
             </div>
           </div>
 
-          {/* Right: live preview */}
-          <div className="w-72 border-l p-4 overflow-y-auto shrink-0">
-            <CardPreview values={formValues} />
+          {/* Sticky preview */}
+          <div className="w-60 border-l bg-muted/10 overflow-y-auto shrink-0">
+            <div className="p-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Preview</p>
+              <CardPreview values={formValues} />
+            </div>
           </div>
+
         </div>
       </div>
     </FormProvider>

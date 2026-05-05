@@ -18,9 +18,7 @@ export default function StatsSection({ cardType }: { cardType: string }) {
 
   return (
     <section>
-      <h2 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-        Stats
-      </h2>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Stats</p>
       <div className="grid grid-cols-4 gap-4">
         {showCost && (
           <Field label="Cost">

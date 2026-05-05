@@ -154,9 +154,9 @@ export default function AbilitiesBuilder() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           Abilities ({abilities.length})
-        </h2>
+        </p>
         <button
           type="button"
           onClick={() => setAbilities([...abilities, newAbility()])}

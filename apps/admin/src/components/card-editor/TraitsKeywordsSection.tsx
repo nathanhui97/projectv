@@ -45,9 +45,7 @@ export default function TraitsKeywordsSection({ traits }: { traits: Trait[] }) {
     <section className="space-y-6">
       {/* Traits */}
       <div>
-        <h2 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-          Traits
-        </h2>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Traits</p>
         <div className="flex flex-wrap gap-2 mb-2 min-h-8">
           {selectedTraits.map((slug) => {
             const trait = traits.find((t) => t.slug === slug);
@@ -106,9 +104,7 @@ export default function TraitsKeywordsSection({ traits }: { traits: Trait[] }) {
 
       {/* Keywords */}
       <div>
-        <h2 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-          Keywords
-        </h2>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Keywords</p>
         <div className="space-y-2">
           {(fields as { id: string }[]).map((field, index) => {
             const kw = selectedKeywords[index];

@@ -35,9 +35,7 @@ export default function RulesTextSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
-        Rules Text
-      </h2>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Rules Text</p>
 
       <Field label="Rules Text">
         <textarea
