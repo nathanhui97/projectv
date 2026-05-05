@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import type { CardFormValues } from "@/app/(admin)/cards/[id]/CardEditor";
 import { Plus, Trash2, ChevronDown, ChevronRight, AlertCircle, Copy, CheckCheck, Code, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Field, Select } from "./FormPrimitives";
+import { Field, Select, TraitsProvider, TraitPicker, type TraitEntry } from "./FormPrimitives";
 import { StepList } from "./StepEditor";
 import { StepSchema } from "@project-v/schemas";
 import { z } from "zod";
@@ -50,6 +50,18 @@ const BOOL_QUALIFIERS: { key: string; label: string }[] = [
 ];
 
 const COLOR_OPTIONS = ["blue", "green", "red", "white", "purple"];
+
+const ZONE_OPTIONS = [
+  { value: "hand",               label: "Hand" },
+  { value: "deck",               label: "Deck" },
+  { value: "resource_deck",      label: "Resource deck" },
+  { value: "resource_area",      label: "Resource area" },
+  { value: "battle_area",        label: "Battle area" },
+  { value: "shield_area",        label: "Shield area" },
+  { value: "shield_base_section",label: "Shield base" },
+  { value: "trash",              label: "Trash" },
+  { value: "removed_from_game",  label: "Removed from game" },
+];
 
 // ─── Step templates ───────────────────────────────────────────────────────────
 
@@ -101,7 +113,7 @@ function newAbility(): Ability {
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
-export default function AbilitiesBuilder() {
+export default function AbilitiesBuilder({ traits = [] }: { traits?: TraitEntry[] }) {
   const { watch, setValue } = useFormContext<CardFormValues>();
   const abilities = (watch("abilities") ?? []) as Ability[];
 
@@ -110,6 +122,7 @@ export default function AbilitiesBuilder() {
   }
 
   return (
+    <TraitsProvider traits={traits}>
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-1">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -152,6 +165,7 @@ export default function AbilitiesBuilder() {
         />
       ))}
     </div>
+    </TraitsProvider>
   );
 }
 
@@ -307,50 +321,56 @@ function AbilityCard({
                     ))}
                   </div>
 
-                  {/* String/number qualifiers */}
+                  {/* Color / number / text / zone qualifiers */}
                   <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { key: "pilot_color",            label: "Pilot color",          type: "color" },
-                      { key: "unit_color",             label: "Unit color",           type: "color" },
-                      { key: "pilot_max_level",        label: "Pilot max level",      type: "number" },
-                      { key: "resource_cost",          label: "Resource cost",        type: "number" },
-                      { key: "attacker_max_ap",        label: "Attacker max AP",      type: "number" },
-                      { key: "pilot_traits_include",   label: "Pilot traits",         type: "traits" },
-                      { key: "source_traits",          label: "Source traits",        type: "traits" },
-                      { key: "attacker_traits_include",label: "Attacker traits",      type: "traits" },
-                      { key: "target_traits_include",  label: "Target traits",        type: "traits" },
-                      { key: "command_traits",         label: "Command traits",       type: "traits" },
-                    ].map(({ key, label, type }) => (
+                    {([
+                      { key: "pilot_color",   label: "Pilot color",     type: "color" },
+                      { key: "unit_color",    label: "Unit color",      type: "color" },
+                      { key: "pilot_max_level",  label: "Pilot max level", type: "number" },
+                      { key: "resource_cost",    label: "Resource cost",   type: "number" },
+                      { key: "attacker_max_ap",  label: "Attacker max AP", type: "number" },
+                      { key: "pilot_name_is",    label: "Pilot name is",   type: "text" },
+                      { key: "from_zone",        label: "From zone",       type: "zone" },
+                      { key: "to_zone",          label: "To zone",         type: "zone" },
+                    ] as { key: string; label: string; type: string }[]).map(({ key, label, type }) => (
                       <div key={key}>
                         <p className="text-xs text-muted-foreground mb-1">{label}</p>
                         {type === "color" ? (
-                          <Select
-                            value={(q[key] as string) ?? ""}
-                            onChange={(e) => setQualifier(key, e.target.value || undefined)}
-                            className="text-xs"
-                          >
+                          <Select value={(q[key] as string) ?? ""} onChange={(e) => setQualifier(key, e.target.value || undefined)} className="text-xs">
                             <option value="">— any —</option>
                             {COLOR_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                           </Select>
+                        ) : type === "zone" ? (
+                          <Select value={(q[key] as string) ?? ""} onChange={(e) => setQualifier(key, e.target.value || undefined)} className="text-xs">
+                            <option value="">— any —</option>
+                            {ZONE_OPTIONS.map(z => <option key={z.value} value={z.value}>{z.label}</option>)}
+                          </Select>
                         ) : type === "number" ? (
-                          <input
-                            type="number"
-                            min={0}
-                            value={(q[key] as number) ?? ""}
-                            onChange={(e) => setQualifier(key, e.target.value ? Number(e.target.value) : undefined)}
-                            className="input text-xs"
-                            placeholder="—"
-                          />
+                          <input type="number" min={0} value={(q[key] as number) ?? ""} onChange={(e) => setQualifier(key, e.target.value ? Number(e.target.value) : undefined)} className="input text-xs" placeholder="—" />
                         ) : (
-                          <input
-                            value={Array.isArray(q[key]) ? (q[key] as string[]).join(", ") : ""}
-                            onChange={(e) => setQualifier(key,
-                              e.target.value ? e.target.value.split(",").map(s => s.trim()).filter(Boolean) : undefined
-                            )}
-                            className="input text-xs"
-                            placeholder="comma-sep"
-                          />
+                          <input value={(q[key] as string) ?? ""} onChange={(e) => setQualifier(key, e.target.value || undefined)} className="input text-xs" placeholder="—" />
                         )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Trait qualifiers — full width with autocomplete */}
+                  <div className="space-y-2">
+                    {([
+                      { key: "pilot_traits_include",    label: "Pilot traits" },
+                      { key: "source_pilot_traits",     label: "Source pilot traits" },
+                      { key: "source_traits",           label: "Source traits" },
+                      { key: "attacker_traits_include", label: "Attacker traits" },
+                      { key: "target_traits_include",   label: "Target traits" },
+                      { key: "command_traits",          label: "Command traits" },
+                    ] as { key: string; label: string }[]).map(({ key, label }) => (
+                      <div key={key}>
+                        <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                        <TraitPicker
+                          value={Array.isArray(q[key]) ? (q[key] as string[]) : []}
+                          onChange={(slugs) => setQualifier(key, slugs.length ? slugs : undefined)}
+                          placeholder={`Add ${label.toLowerCase()}…`}
+                        />
                       </div>
                     ))}
                   </div>

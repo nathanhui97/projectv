@@ -237,7 +237,7 @@ export default function CardEditor({
               )}
               {activeTab === "abilities" && (
                 <div className="p-6">
-                  <AbilitiesBuilder />
+                  <AbilitiesBuilder traits={traits} />
                 </div>
               )}
             </div>

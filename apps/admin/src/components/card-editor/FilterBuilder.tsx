@@ -4,6 +4,7 @@
 // { side: "enemy", type: "unit", max_level: 5, name_is: "Zaku II", has_keyword: ["blocker"] }
 // All keys are ANDed together. normalizeFilter() converts to FilterSchema on save.
 import type { ShorthandFilter } from "@project-v/schemas";
+import { TraitPicker } from "./FormPrimitives";
 export type { ShorthandFilter };
 
 interface FilterBuilderProps {
@@ -32,12 +33,15 @@ const KEYWORDS = [
 ] as const;
 
 const ZONES = [
-  { value: "battle_area",   label: "Battle area" },
-  { value: "hand",          label: "Hand" },
-  { value: "deck",          label: "Deck" },
-  { value: "trash",         label: "Trash" },
-  { value: "resource_area", label: "Resource area" },
-  { value: "shield_area",   label: "Shield area" },
+  { value: "battle_area",        label: "Battle area" },
+  { value: "hand",               label: "Hand" },
+  { value: "deck",               label: "Deck" },
+  { value: "resource_deck",      label: "Resource deck" },
+  { value: "resource_area",      label: "Resource area" },
+  { value: "shield_area",        label: "Shield area" },
+  { value: "shield_base_section",label: "Shield base" },
+  { value: "trash",              label: "Trash" },
+  { value: "removed_from_game",  label: "Removed from game" },
 ] as const;
 
 export default function FilterBuilder({ filter, onChange, label = "Filter" }: FilterBuilderProps) {
@@ -117,26 +121,41 @@ export default function FilterBuilder({ filter, onChange, label = "Filter" }: Fi
         </div>
       </div>
 
-      {/* Row 3: name_includes + traits */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Row 3: name_includes */}
+      <div>
+        <label className="text-xs text-muted-foreground block mb-1">Name includes</label>
+        <input
+          value={f.name_includes ?? ""}
+          onChange={(e) => onChange(set(f, "name_includes", e.target.value || undefined))}
+          placeholder="e.g. Gundam"
+          className="input text-sm w-full"
+        />
+      </div>
+
+      {/* Trait filters */}
+      <div className="space-y-2">
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Name includes</label>
-          <input
-            value={f.name_includes ?? ""}
-            onChange={(e) => onChange(set(f, "name_includes", e.target.value || undefined))}
-            placeholder="e.g. Gundam"
-            className="input text-sm w-full"
+          <label className="text-xs text-muted-foreground block mb-1">Traits — ALL must match</label>
+          <TraitPicker
+            value={f.traits ?? []}
+            onChange={(slugs) => onChange(set(f, "traits", slugs.length ? slugs : undefined))}
+            placeholder="Add trait (all must match)…"
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Traits (ALL must match, comma-separated)</label>
-          <input
-            value={f.traits?.join(", ") ?? ""}
-            onChange={(e) => onChange(set(f, "traits",
-              e.target.value ? e.target.value.split(",").map((s) => s.trim()).filter(Boolean) : undefined
-            ))}
-            placeholder="e.g. Zeon, Newtype"
-            className="input text-sm w-full"
+          <label className="text-xs text-muted-foreground block mb-1">Traits — ANY must match</label>
+          <TraitPicker
+            value={f.traits_any ?? []}
+            onChange={(slugs) => onChange(set(f, "traits_any", slugs.length ? slugs : undefined))}
+            placeholder="Add trait (any must match)…"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Traits — NONE must match (exclude)</label>
+          <TraitPicker
+            value={f.traits_exclude ?? []}
+            onChange={(slugs) => onChange(set(f, "traits_exclude", slugs.length ? slugs : undefined))}
+            placeholder="Add trait to exclude…"
           />
         </div>
       </div>

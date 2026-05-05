@@ -66,6 +66,7 @@ const ACTION_TYPES = [
   "prompt_number",
   // Misc
   "manual_resolve",
+  "noop",
 ] as const;
 
 type Step = Record<string, unknown>;
@@ -117,6 +118,7 @@ function defaultStep(action: string): Step {
     case "shuffle":           return { action, side: "friendly", zone: "deck" };
     case "reveal":            return { action, target: "$target", to: "all" };
     case "manual_resolve":    return { action, prompt_text: "Resolve this effect manually." };
+    case "noop":              return { action };
     default:                  return { action };
   }
 }
@@ -588,14 +590,11 @@ function DurationSelect({ value, onChange }: { value: string; onChange: (v: stri
     <Select value={value} onChange={(e) => onChange(e.target.value)}>
       <optgroup label="── Expires once ──">
         <option value="end_of_turn">End of this turn</option>
-        <option value="end_of_your_turn">End of your next turn</option>
-        <option value="end_of_opponent_turn">End of opponent's next turn</option>
+        <option value="end_of_opponent_turn">End of opponent's turn</option>
         <option value="end_of_battle">End of battle</option>
         <option value="until_end_of_phase">End of phase</option>
       </optgroup>
-      <optgroup label="── Active while ──">
-        <option value="your_turns_only">Your turns only (recurring)</option>
-        <option value="opponent_turns_only">Opponent's turns only (recurring)</option>
+      <optgroup label="── Continuous ──">
         <option value="permanent">Permanent (always on)</option>
         <option value="while_paired">While paired</option>
         <option value="while_linked">While linked</option>
@@ -670,7 +669,8 @@ function StepFields({
         </>
       );
 
-    case "deal_damage":
+    case "deal_damage": {
+      const amtIsVar = typeof step.amount === "string";
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
@@ -678,7 +678,17 @@ function StepFields({
               <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
             </Field>
             <Field label="Amount">
-              <input type="number" min={0} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={amtIsVar} onChange={(e) => set("amount", e.target.checked ? "$n" : 1)} />
+                  Use variable ($n)
+                </label>
+                {amtIsVar ? (
+                  <input className="input text-sm w-full" value={(step.amount as string) ?? "$n"} onChange={(e) => set("amount", e.target.value)} placeholder="$n" />
+                ) : (
+                  <input type="number" min={0} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
+                )}
+              </div>
             </Field>
           </div>
           <Field label="Damage type">
@@ -689,6 +699,7 @@ function StepFields({
           </Field>
         </>
       );
+    }
 
     case "modify_stat":
       return (
@@ -702,6 +713,7 @@ function StepFields({
                 <option value="ap">AP</option>
                 <option value="hp">HP</option>
                 <option value="level">Level</option>
+                <option value="cost">Cost</option>
               </Select>
             </Field>
           </div>
@@ -745,7 +757,15 @@ function StepFields({
             <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Amount">
-            <input type="number" min={1} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
+            <div className="space-y-1">
+              <label className="flex items-center gap-2 text-xs cursor-pointer">
+                <input type="checkbox" checked={step.amount === "all"} onChange={(e) => set("amount", e.target.checked ? "all" : 1)} />
+                Heal all damage
+              </label>
+              {step.amount !== "all" && (
+                <input type="number" min={1} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
+              )}
+            </div>
           </Field>
         </div>
       );
@@ -837,6 +857,7 @@ function StepFields({
                 <option value="ap">AP</option>
                 <option value="hp">HP</option>
                 <option value="level">Level</option>
+                <option value="cost">Cost</option>
               </Select>
             </Field>
           </div>
@@ -1067,7 +1088,15 @@ function StepFields({
               <SideSelect value={(step.side as string) ?? "enemy"} onChange={(v) => set("side", v)} />
             </Field>
             <Field label="Amount">
-              <input type="number" min={1} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
+              <div className="space-y-1">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={step.amount === "all"} onChange={(e) => set("amount", e.target.checked ? "all" : 1)} />
+                  Discard all
+                </label>
+                {step.amount !== "all" && (
+                  <input type="number" min={1} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
+                )}
+              </div>
             </Field>
             <Field label="Selector">
               <Select value={(step.selector as string) ?? "controller_chooses"} onChange={(e) => set("selector", e.target.value)}>
@@ -1077,6 +1106,11 @@ function StepFields({
               </Select>
             </Field>
           </div>
+          <FilterBuilder
+            filter={(step.filter as ShorthandFilter) ?? {}}
+            onChange={(f) => set("filter", Object.keys(f).length ? f : undefined)}
+            label="Filter hand cards (optional — leave blank for any)"
+          />
         </>
       );
 
@@ -1126,12 +1160,20 @@ function StepFields({
       const hasInline = !!(step.name || step.ap != null || step.hp != null);
       return (
         <>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <Field label="Count">
               <input type="number" min={1} className="input text-sm w-full" value={(step.count as number) ?? 1} onChange={(e) => set("count", Number(e.target.value))} />
             </Field>
             <Field label="Side">
               <SideSelect value={(step.side as string) ?? "friendly"} onChange={(v) => set("side", v)} />
+            </Field>
+            <Field label="Zone">
+              <Select value={(step.zone as string) ?? "battle_area"} onChange={(e) => set("zone", e.target.value)}>
+                <option value="battle_area">Battle area</option>
+                <option value="resource_area">Resource area</option>
+                <option value="shield_area">Shield area</option>
+                <option value="hand">Hand</option>
+              </Select>
             </Field>
             <Field label="Rest state">
               <Select value={(step.rest_state as string) ?? "rested"} onChange={(e) => set("rest_state", e.target.value)}>
@@ -1304,8 +1346,9 @@ function StepFields({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Reveal to">
-              <Select value={(step.reveal as string) ?? "controller"} onChange={(e) => set("reveal", e.target.value)}>
+              <Select value={(step.reveal_to as string) ?? "controller"} onChange={(e) => set("reveal_to", e.target.value)}>
                 <option value="controller">Controller only</option>
+                <option value="opponent">Opponent only</option>
                 <option value="all">All players</option>
               </Select>
             </Field>
@@ -1328,6 +1371,9 @@ function StepFields({
           />
         </Field>
       );
+
+    case "noop":
+      return <p className="text-xs text-muted-foreground italic">No-op — does nothing. Use as a placeholder.</p>;
 
     default:
       return (

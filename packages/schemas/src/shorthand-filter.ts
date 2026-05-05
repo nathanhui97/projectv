@@ -6,7 +6,9 @@ export type ShorthandFilter = {
   side?: "friendly" | "enemy" | "any";
   type?: "unit" | "pilot" | "command" | "base" | "token";
   color?: "blue" | "green" | "red" | "white" | "purple";
-  traits?: string[];
+  traits?: string[];       // all must match → traits_include
+  traits_any?: string[];   // any must match → traits_any
+  traits_exclude?: string[]; // none must match → traits_exclude
   max_level?: number;
   min_level?: number;
   min_hp?: number;
@@ -36,7 +38,7 @@ export type ShorthandFilter = {
 // so they're removed from here — shorthandToFilter handles them explicitly.
 const FORMAL_ONLY_KEYS = new Set([
   'all_of', 'any_of', 'not',
-  'traits_include', 'traits_any', 'traits_exclude',
+  'traits_include',               // shorthand uses 'traits' → traits_include
   'cost', 'level', 'ap', 'hp',
   'has_any_keyword', 'is_resting',
   'set_code', 'card_id',
@@ -50,7 +52,9 @@ function shorthandToFilter(f: ShorthandFilter): Filter {
   if (f.side)               clauses.push({ side: f.side });
   if (f.type)               clauses.push({ type: f.type });
   if (f.color)              clauses.push({ color: f.color });
-  if (f.traits?.length)     clauses.push({ traits_include: f.traits });
+  if (f.traits?.length)         clauses.push({ traits_include: f.traits });
+  if (f.traits_any?.length)     clauses.push({ traits_any: f.traits_any });
+  if (f.traits_exclude?.length) clauses.push({ traits_exclude: f.traits_exclude });
   if (f.min_level != null)  clauses.push({ level: { op: '>=', value: f.min_level } });
   if (f.max_level != null)  clauses.push({ level: { op: '<=', value: f.max_level } });
   if (f.min_hp != null)     clauses.push({ hp: { op: '>=', value: f.min_hp } });
