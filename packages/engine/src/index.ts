@@ -17,32 +17,26 @@ export {
   isLinked,
 } from './filter';
 
-// ─── Engine actions (to be implemented in Weeks 3-4) ─────────────────────────
+export { mulberry32, drawRng, shuffleArray } from './rng';
 
-export function getInitialState(): never {
-  throw new Error('Not implemented');
-}
+export type { InitConfig, PlayerSetup } from './state';
+export { getInitialState } from './state';
 
-export function validateAction(): never {
-  throw new Error('Not implemented');
-}
+export { checkWinCondition, setWinner } from './win';
 
-export function applyAction(): never {
-  throw new Error('Not implemented');
-}
+export { advancePhase, applyPhaseEntry } from './phases';
 
-export function resolveChoice(): never {
-  throw new Error('Not implemented');
-}
+export type { ConditionContext } from './conditions';
+export { evaluateCondition } from './conditions';
 
-export function processQueue(): never {
-  throw new Error('Not implemented');
-}
+export type { StepResult, StepContext } from './steps';
+export { resolveStep, destroyInstance } from './steps';
 
-export function checkWinCondition(): never {
-  throw new Error('Not implemented');
-}
+export type { TriggerEvent } from './triggers';
+export { collectTriggers } from './triggers';
 
-export function listLegalActions(): never {
-  throw new Error('Not implemented');
-}
+export { processQueue } from './queue';
+
+export { validateAction } from './validate';
+export { applyAction } from './apply';
+export { listLegalActions } from './legal';
