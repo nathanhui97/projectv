@@ -275,6 +275,7 @@ type TargetMode = "self" | "all_enemies" | "all_friendly" | "all_any" | "variabl
 interface TargetCriteria {
   type?: string;
   color?: string;
+  traits?: string[];
   min_level?: number;
   max_level?: number;
   has_keyword?: string[];
@@ -303,6 +304,7 @@ function extractCriteria(value: unknown): TargetCriteria {
   return {
     type: f.type as string | undefined,
     color: f.color as string | undefined,
+    traits: f.traits as string[] | undefined,
     min_level: f.min_level as number | undefined,
     max_level: f.max_level as number | undefined,
     has_keyword: f.has_keyword as string[] | undefined,
@@ -321,6 +323,7 @@ function buildTarget(mode: TargetMode, criteria: TargetCriteria, varName: string
   else filter.side = "any";
   if (criteria.type) filter.type = criteria.type;
   if (criteria.color) filter.color = criteria.color;
+  if (criteria.traits?.length) filter.traits = criteria.traits;
   if (criteria.min_level != null) filter.min_level = criteria.min_level;
   if (criteria.max_level != null) filter.max_level = criteria.max_level;
   if (criteria.has_keyword?.length) filter.has_keyword = criteria.has_keyword;
@@ -413,6 +416,17 @@ function TargetPicker({
                 <option value="white">White</option>
                 <option value="purple">Purple</option>
               </Select>
+            </div>
+            <div className="col-span-2">
+              <p className="text-xs text-muted-foreground mb-1">Traits (comma-separated, ALL must match)</p>
+              <input
+                className="input text-sm w-full"
+                value={criteria.traits?.join(", ") ?? ""}
+                onChange={(e) => setCriteria({
+                  traits: e.target.value ? e.target.value.split(",").map(s => s.trim()).filter(Boolean) : undefined,
+                })}
+                placeholder="e.g. ZAFT, Mobile Suit"
+              />
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Min level</p>
