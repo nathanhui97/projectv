@@ -524,6 +524,51 @@ function KeywordPicker({
   );
 }
 
+const KEYWORDS_WITH_AMOUNT = new Set(["repair", "breach"]);
+
+function KeywordPickerWithAmounts({
+  value,
+  onChange,
+}: {
+  value: { keyword: string; amount?: number }[];
+  onChange: (v: { keyword: string; amount?: number }[]) => void;
+}) {
+  function toggle(kw: string) {
+    const has = value.some(k => k.keyword === kw);
+    if (has) onChange(value.filter(k => k.keyword !== kw));
+    else onChange([...value, { keyword: kw }]);
+  }
+  function setAmount(kw: string, amount: number | undefined) {
+    onChange(value.map(k => k.keyword === kw ? { ...k, amount } : k));
+  }
+  return (
+    <div className="flex flex-wrap gap-x-5 gap-y-2 border rounded-md p-2.5 bg-muted/20">
+      {KEYWORDS.map((kw) => {
+        const entry = value.find(k => k.keyword === kw);
+        const active = !!entry;
+        return (
+          <div key={kw} className="flex items-center gap-1.5">
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+              <input type="checkbox" checked={active} onChange={() => toggle(kw)} />
+              {kw.replace(/_/g, " ")}
+            </label>
+            {active && KEYWORDS_WITH_AMOUNT.has(kw) && (
+              <input
+                type="number"
+                min={1}
+                value={entry?.amount ?? ""}
+                onChange={(e) => setAmount(kw, e.target.value ? Number(e.target.value) : undefined)}
+                className="input text-xs w-14"
+                placeholder="amt"
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function DurationSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <Select value={value} onChange={(e) => onChange(e.target.value)}>
@@ -651,7 +696,7 @@ function StepFields({
       );
 
     case "gain_keyword": {
-      const gainKws = ((step.keywords as { keyword: string }[]) ?? []).map((k) => k.keyword);
+      const gainKws = (step.keywords as { keyword: string; amount?: number }[]) ?? [];
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
@@ -663,9 +708,9 @@ function StepFields({
             </Field>
           </div>
           <Field label="Keywords to gain">
-            <KeywordPicker
-              selected={gainKws}
-              onChange={(kws) => set("keywords", kws.map((kw) => ({ keyword: kw })))}
+            <KeywordPickerWithAmounts
+              value={gainKws}
+              onChange={(kws) => set("keywords", kws)}
             />
           </Field>
         </>

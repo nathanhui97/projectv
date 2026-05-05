@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Save, Globe, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import BasicInfoSection from "@/components/card-editor/BasicInfoSection";
 import StatsSection from "@/components/card-editor/StatsSection";
 import TraitsKeywordsSection from "@/components/card-editor/TraitsKeywordsSection";
@@ -115,38 +116,34 @@ export default function CardEditor({
   const isNew = card === null;
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"info" | "abilities">("info");
 
   const methods = useForm<CardFormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: card ? cardToFormValues(card) : defaultFormValues(),
   });
 
-  const { handleSubmit, watch, formState: { errors } } = methods;
+  const { watch, formState: { errors } } = methods;
   const formValues = watch();
 
   async function onSave(status: "draft" | "published") {
     const valid = await methods.trigger();
     if (!valid) return;
-
     const values = methods.getValues();
     setSaving(true);
     setSaveError(null);
-
     try {
       const url = isNew ? "/api/cards" : `/api/cards/${card.id}`;
       const method = isNew ? "POST" : "PUT";
-
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data: values, status }),
       });
-
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error((err as { error?: string }).error ?? "Save failed");
       }
-
       const saved = await res.json() as { id: string };
       if (isNew) router.push(`/cards/${saved.id}`);
       else router.refresh();
@@ -196,49 +193,58 @@ export default function CardEditor({
           </div>
         </div>
 
-        {/* Body: scrollable form + sticky preview */}
+        {/* Body */}
         <div className="flex flex-1 overflow-hidden">
 
-          {/* Main form — single scrolling column */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-8 py-6 space-y-0">
+          {/* Main column: tabs + content */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Tab bar */}
+            <div className="flex gap-1 px-6 border-b shrink-0">
+              {(["info", "abilities"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    "px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors",
+                    activeTab === tab
+                      ? "border-primary text-foreground font-medium"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {tab === "info" ? "Card Info" : "Abilities"}
+                </button>
+              ))}
+            </div>
 
-              {/* ── Identity: image + basic fields ── */}
-              <div className="flex gap-8 pb-8">
-                <div className="w-40 shrink-0">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Art</p>
-                  <ImageUpload cardId={formValues.id || "new"} />
+            {/* Tab content */}
+            <div className="flex-1 overflow-y-auto">
+              {activeTab === "info" && (
+                <div className="p-6 space-y-0">
+                  {/* Image + basic fields side by side */}
+                  <div className="flex gap-8 pb-7">
+                    <div className="w-36 shrink-0">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Art</p>
+                      <ImageUpload cardId={formValues.id || "new"} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <BasicInfoSection />
+                    </div>
+                  </div>
+                  <div className="border-t py-7"><StatsSection cardType={formValues.type} /></div>
+                  <div className="border-t py-7"><TraitsKeywordsSection traits={traits} /></div>
+                  <div className="border-t py-7"><RulesTextSection /></div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <BasicInfoSection />
+              )}
+              {activeTab === "abilities" && (
+                <div className="p-6">
+                  <AbilitiesBuilder />
                 </div>
-              </div>
-
-              {/* ── Stats ── */}
-              <div className="border-t py-8">
-                <StatsSection cardType={formValues.type} />
-              </div>
-
-              {/* ── Traits & Keywords side by side ── */}
-              <div className="border-t py-8">
-                <TraitsKeywordsSection traits={traits} />
-              </div>
-
-              {/* ── Rules text ── */}
-              <div className="border-t py-8">
-                <RulesTextSection />
-              </div>
-
-              {/* ── Abilities ── */}
-              <div className="border-t py-8">
-                <AbilitiesBuilder />
-              </div>
-
+              )}
             </div>
           </div>
 
-          {/* Sticky preview */}
-          <div className="w-60 border-l bg-muted/10 overflow-y-auto shrink-0">
+          {/* Preview rail */}
+          <div className="w-56 border-l bg-muted/10 overflow-y-auto shrink-0">
             <div className="p-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Preview</p>
               <CardPreview values={formValues} />
