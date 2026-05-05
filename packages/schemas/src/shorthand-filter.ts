@@ -91,6 +91,16 @@ export function normalizeFilter(f: unknown): Filter {
   return shorthandToFilter(obj as ShorthandFilter);
 }
 
+// Normalizes a TargetRef: if it's { filter: ShorthandFilter }, converts the filter.
+function normalizeTargetRef(target: unknown): unknown {
+  if (!target || typeof target !== 'object' || Array.isArray(target)) return target;
+  const t = target as Record<string, unknown>;
+  if ('filter' in t && t.filter && typeof t.filter === 'object') {
+    return { filter: normalizeFilter(t.filter) };
+  }
+  return target;
+}
+
 // Recursively converts all filter fields in a step tree.
 export function normalizeStepFilters(step: unknown): unknown {
   if (!step || typeof step !== 'object' || Array.isArray(step)) return step;
@@ -99,6 +109,13 @@ export function normalizeStepFilters(step: unknown): unknown {
 
   if (s.filter && typeof s.filter === 'object') {
     out.filter = normalizeFilter(s.filter);
+  }
+
+  // Normalize filter-object TargetRefs on all target fields
+  for (const field of ['target', 'new_target', 'pilot', 'unit', 'source']) {
+    if (s[field] && typeof s[field] === 'object') {
+      out[field] = normalizeTargetRef(s[field]);
+    }
   }
 
   if (Array.isArray(s.on_yes))  out.on_yes = s.on_yes.map(normalizeStepFilters);

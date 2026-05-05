@@ -270,9 +270,213 @@ function StepItem({
 
 // ─── Action-specific fields ───────────────────────────────────────────────────
 
-// Target / store_as text input — accepts $variable names (e.g. $target, $self, $paired_pilot)
-// For filter-object targets, switch to JSON view.
-function TargetInput({ value, onChange, placeholder = "$target" }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+type TargetMode = "self" | "all_enemies" | "all_friendly" | "all_any" | "variable";
+
+interface TargetCriteria {
+  type?: string;
+  color?: string;
+  min_level?: number;
+  max_level?: number;
+  has_keyword?: string[];
+  is_rested?: boolean;
+  is_damaged?: boolean;
+  is_linked?: boolean;
+}
+
+function detectMode(value: unknown): TargetMode {
+  if (value === "$self") return "self";
+  if (typeof value === "string") return "variable";
+  if (value && typeof value === "object" && "filter" in value) {
+    const f = (value as Record<string, unknown>).filter as Record<string, unknown> | undefined;
+    const side = f?.side as string | undefined;
+    if (side === "enemy") return "all_enemies";
+    if (side === "friendly") return "all_friendly";
+    if (side === "any") return "all_any";
+    return "all_any";
+  }
+  return "variable";
+}
+
+function extractCriteria(value: unknown): TargetCriteria {
+  if (!value || typeof value !== "object" || !("filter" in value)) return {};
+  const f = (value as Record<string, unknown>).filter as Record<string, unknown>;
+  return {
+    type: f.type as string | undefined,
+    color: f.color as string | undefined,
+    min_level: f.min_level as number | undefined,
+    max_level: f.max_level as number | undefined,
+    has_keyword: f.has_keyword as string[] | undefined,
+    is_rested: f.rested as boolean | undefined,
+    is_damaged: f.is_damaged as boolean | undefined,
+    is_linked: f.is_linked as boolean | undefined,
+  };
+}
+
+function buildTarget(mode: TargetMode, criteria: TargetCriteria, varName: string): unknown {
+  if (mode === "self") return "$self";
+  if (mode === "variable") return varName || "$target";
+  const filter: Record<string, unknown> = {};
+  if (mode === "all_enemies") filter.side = "enemy";
+  else if (mode === "all_friendly") filter.side = "friendly";
+  else filter.side = "any";
+  if (criteria.type) filter.type = criteria.type;
+  if (criteria.color) filter.color = criteria.color;
+  if (criteria.min_level != null) filter.min_level = criteria.min_level;
+  if (criteria.max_level != null) filter.max_level = criteria.max_level;
+  if (criteria.has_keyword?.length) filter.has_keyword = criteria.has_keyword;
+  if (criteria.is_rested) filter.rested = true;
+  if (criteria.is_damaged) filter.is_damaged = true;
+  if (criteria.is_linked) filter.is_linked = true;
+  return { filter };
+}
+
+function TargetPicker({
+  value,
+  onChange,
+  label = "Target",
+}: {
+  value: unknown;
+  onChange: (v: unknown) => void;
+  label?: string;
+}) {
+  const mode = detectMode(value);
+  const criteria = extractCriteria(value);
+  const varName = typeof value === "string" && value !== "$self" ? value : "$target";
+
+  function setMode(m: TargetMode) {
+    onChange(buildTarget(m, criteria, varName));
+  }
+
+  function setCriteria(patch: Partial<TargetCriteria>) {
+    const next = { ...criteria, ...patch };
+    // Clean up undefined/empty values
+    (Object.keys(next) as (keyof TargetCriteria)[]).forEach(k => {
+      if (next[k] === undefined || next[k] === "" || (Array.isArray(next[k]) && (next[k] as string[]).length === 0)) {
+        delete next[k];
+      }
+    });
+    onChange(buildTarget(mode, next, varName));
+  }
+
+  const showCriteria = mode === "all_enemies" || mode === "all_friendly" || mode === "all_any";
+
+  return (
+    <div className="space-y-2">
+      <Select
+        value={mode}
+        onChange={(e) => setMode(e.target.value as TargetMode)}
+      >
+        <option value="self">Self</option>
+        <option value="all_enemies">All enemies</option>
+        <option value="all_friendly">All friendly</option>
+        <option value="all_any">All (any side)</option>
+        <option value="variable">Stored variable ($…)</option>
+      </Select>
+
+      {mode === "variable" && (
+        <input
+          className="input text-sm w-full"
+          value={varName}
+          onChange={(e) => onChange(e.target.value || "$target")}
+          placeholder="$target"
+        />
+      )}
+
+      {showCriteria && (
+        <div className="border rounded-md p-2.5 space-y-2 bg-muted/20">
+          <p className="text-xs font-medium text-muted-foreground">Criteria (optional — leave blank for all)</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Type</p>
+              <Select
+                value={criteria.type ?? ""}
+                onChange={(e) => setCriteria({ type: e.target.value || undefined })}
+              >
+                <option value="">Any type</option>
+                <option value="unit">Unit</option>
+                <option value="pilot">Pilot</option>
+                <option value="command">Command</option>
+                <option value="base">Base</option>
+                <option value="token">Token</option>
+              </Select>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Color</p>
+              <Select
+                value={criteria.color ?? ""}
+                onChange={(e) => setCriteria({ color: e.target.value || undefined })}
+              >
+                <option value="">Any color</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="red">Red</option>
+                <option value="white">White</option>
+                <option value="purple">Purple</option>
+              </Select>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Min level</p>
+              <input
+                type="number"
+                min={1}
+                className="input text-sm w-full"
+                value={criteria.min_level ?? ""}
+                onChange={(e) => setCriteria({ min_level: e.target.value ? Number(e.target.value) : undefined })}
+                placeholder="—"
+              />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Max level</p>
+              <input
+                type="number"
+                min={1}
+                className="input text-sm w-full"
+                value={criteria.max_level ?? ""}
+                onChange={(e) => setCriteria({ max_level: e.target.value ? Number(e.target.value) : undefined })}
+                placeholder="—"
+              />
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Has keyword</p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
+              {KEYWORDS.map((kw) => (
+                <label key={kw} className="flex items-center gap-1 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={(criteria.has_keyword ?? []).includes(kw)}
+                    onChange={(e) => {
+                      const curr = criteria.has_keyword ?? [];
+                      setCriteria({ has_keyword: e.target.checked ? [...curr, kw] : curr.filter(k => k !== kw) });
+                    }}
+                  />
+                  {kw.replace(/_/g, " ")}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+              <input type="checkbox" checked={!!criteria.is_rested} onChange={(e) => setCriteria({ is_rested: e.target.checked || undefined })} />
+              Is rested
+            </label>
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+              <input type="checkbox" checked={!!criteria.is_damaged} onChange={(e) => setCriteria({ is_damaged: e.target.checked || undefined })} />
+              Is damaged
+            </label>
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+              <input type="checkbox" checked={!!criteria.is_linked} onChange={(e) => setCriteria({ is_linked: e.target.checked || undefined })} />
+              Is linked
+            </label>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Store-as text input (for $variable naming)
+function StoreAsInput({ value, onChange, placeholder = "$target" }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <input
       className="input text-sm w-full"
@@ -282,9 +486,6 @@ function TargetInput({ value, onChange, placeholder = "$target" }: { value: stri
     />
   );
 }
-
-// Alias used for store_as fields to make intent clear at call sites
-const StoreAsInput = TargetInput;
 
 function SideSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -407,8 +608,8 @@ function StepFields({
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Target ($var)">
-              <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+            <Field label="Target">
+              <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
             </Field>
             <Field label="Amount">
               <input type="number" min={0} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
@@ -427,8 +628,8 @@ function StepFields({
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Target ($var)">
-              <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+            <Field label="Target">
+              <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
             </Field>
             <Field label="Stat">
               <Select value={(step.stat as string) ?? "ap"} onChange={(e) => set("stat", e.target.value)}>
@@ -454,8 +655,8 @@ function StepFields({
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Target ($var)">
-              <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+            <Field label="Target">
+              <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
             </Field>
             <Field label="Duration">
               <DurationSelect value={(step.duration as string) ?? "end_of_turn"} onChange={(v) => set("duration", v)} />
@@ -474,8 +675,8 @@ function StepFields({
     case "heal":
       return (
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Amount">
             <input type="number" min={1} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
@@ -495,16 +696,16 @@ function StepFields({
     case "move_to_shield":
     case "discard":
       return (
-        <Field label="Target ($var)">
-          <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+        <Field label="Target">
+          <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
         </Field>
       );
 
     case "move_to_resource":
       return (
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Rest state">
             <Select value={(step.rest_state as string) ?? "rested"} onChange={(e) => set("rest_state", e.target.value)}>
@@ -518,8 +719,8 @@ function StepFields({
     case "look_at":
       return (
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Reveal to">
             <Select value={(step.reveal_to as string) ?? "controller"} onChange={(e) => set("reveal_to", e.target.value)}>
@@ -534,11 +735,11 @@ function StepFields({
     case "pair_pilot":
       return (
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Pilot ($var)">
-            <TargetInput value={(step.pilot as string) ?? ""} onChange={(v) => set("pilot", v)} placeholder="$pilot" />
+          <Field label="Pilot">
+            <TargetPicker value={step.pilot} onChange={(v) => set("pilot", v)} />
           </Field>
-          <Field label="Unit ($var)">
-            <TargetInput value={(step.unit as string) ?? ""} onChange={(v) => set("unit", v)} placeholder="$unit" />
+          <Field label="Unit">
+            <TargetPicker value={step.unit} onChange={(v) => set("unit", v)} />
           </Field>
         </div>
       );
@@ -546,8 +747,8 @@ function StepFields({
     case "prevent_damage":
       return (
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Amount">
             <input type="number" min={0} className="input text-sm w-full" value={(step.amount as number) ?? 1} onChange={(e) => set("amount", Number(e.target.value))} />
@@ -562,8 +763,8 @@ function StepFields({
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Target ($var)">
-              <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+            <Field label="Target">
+              <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
             </Field>
             <Field label="Stat">
               <Select value={(step.stat as string) ?? "ap"} onChange={(e) => set("stat", e.target.value)}>
@@ -589,8 +790,8 @@ function StepFields({
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Target ($var)">
-              <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+            <Field label="Target">
+              <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
             </Field>
             <Field label="Duration">
               <DurationSelect value={(step.duration as string) ?? "end_of_turn"} onChange={(v) => set("duration", v)} />
@@ -607,8 +808,8 @@ function StepFields({
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Target ($var)">
-              <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+            <Field label="Target">
+              <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
             </Field>
             <Field label="Duration">
               <DurationSelect value={(step.duration as string) ?? "end_of_turn"} onChange={(v) => set("duration", v)} />
@@ -628,11 +829,11 @@ function StepFields({
     case "copy_abilities":
       return (
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
-          <Field label="Copy from ($var)">
-            <TargetInput value={(step.source as string) ?? ""} onChange={(v) => set("source", v)} placeholder="$source" />
+          <Field label="Copy from">
+            <TargetPicker value={step.source} onChange={(v) => set("source", v)} />
           </Field>
           <Field label="Duration">
             <DurationSelect value={(step.duration as string) ?? "end_of_turn"} onChange={(v) => set("duration", v)} />
@@ -643,8 +844,8 @@ function StepFields({
     case "add_counter":
       return (
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Counter name">
             <input className="input text-sm w-full" value={(step.counter_name as string) ?? ""} onChange={(e) => set("counter_name", e.target.value)} placeholder="charge" />
@@ -659,8 +860,8 @@ function StepFields({
       return (
         <>
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Target ($var)">
-              <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+            <Field label="Target">
+              <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
             </Field>
             <Field label="Counter name">
               <input className="input text-sm w-full" value={(step.counter_name as string) ?? ""} onChange={(e) => set("counter_name", e.target.value)} placeholder="charge" />
@@ -703,8 +904,8 @@ function StepFields({
     case "deploy_card":
       return (
         <>
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <label className="flex items-center gap-2 text-xs cursor-pointer">
             <input
@@ -721,8 +922,8 @@ function StepFields({
     case "prevent_ready":
       return (
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Duration">
             <DurationSelect value={(step.duration as string) ?? "end_of_turn"} onChange={(v) => set("duration", v)} />
@@ -732,16 +933,16 @@ function StepFields({
 
     case "change_attack_target":
       return (
-        <Field label="New target ($var or filter)">
-          <TargetInput value={(step.new_target as string) ?? ""} onChange={(v) => set("new_target", v)} />
+        <Field label="New target">
+          <TargetPicker value={step.new_target} onChange={(v) => set("new_target", v)} />
         </Field>
       );
 
     case "modify_cost":
       return (
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Amount (negative = reduce)">
             <input type="number" className="input text-sm w-full" value={(step.amount as number) ?? -1} onChange={(e) => set("amount", Number(e.target.value))} />
@@ -1012,8 +1213,8 @@ function StepFields({
     case "reveal":
       return (
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Target ($var)">
-            <TargetInput value={(step.target as string) ?? ""} onChange={(v) => set("target", v)} />
+          <Field label="Target">
+            <TargetPicker value={step.target} onChange={(v) => set("target", v)} />
           </Field>
           <Field label="Reveal to">
             <Select value={(step.to as string) ?? "all"} onChange={(e) => set("to", e.target.value)}>
