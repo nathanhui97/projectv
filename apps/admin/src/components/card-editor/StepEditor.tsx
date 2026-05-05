@@ -572,15 +572,22 @@ function KeywordPickerWithAmounts({
 function DurationSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <Select value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="end_of_turn">End of turn</option>
-      <option value="end_of_opponent_turn">End of opponent's turn</option>
-      <option value="end_of_battle">End of battle</option>
-      <option value="until_end_of_phase">Until end of phase</option>
-      <option value="permanent">Permanent</option>
-      <option value="while_paired">While paired</option>
-      <option value="while_linked">While linked</option>
-      <option value="while_in_zone">While in zone</option>
-      <option value="until_destroyed">Until destroyed</option>
+      <optgroup label="── Expires once ──">
+        <option value="end_of_turn">End of this turn</option>
+        <option value="end_of_your_turn">End of your next turn</option>
+        <option value="end_of_opponent_turn">End of opponent's next turn</option>
+        <option value="end_of_battle">End of battle</option>
+        <option value="until_end_of_phase">End of phase</option>
+      </optgroup>
+      <optgroup label="── Active while ──">
+        <option value="your_turns_only">Your turns only (recurring)</option>
+        <option value="opponent_turns_only">Opponent's turns only (recurring)</option>
+        <option value="permanent">Permanent (always on)</option>
+        <option value="while_paired">While paired</option>
+        <option value="while_linked">While linked</option>
+        <option value="while_in_zone">While in zone</option>
+        <option value="until_destroyed">Until destroyed</option>
+      </optgroup>
     </Select>
   );
 }
