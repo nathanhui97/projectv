@@ -51,6 +51,22 @@ export const ConditionSchema: z.ZodType = z.lazy(() =>
       op: ComparisonOpSchema,
       value: z.number().int(),
     }),
+    // Player level (resource count)
+    z.object({
+      type: z.literal('player_level'),
+      side: SideSchema,
+      op: ComparisonOpSchema,
+      value: z.number().int(),
+    }),
+    // Count cards in a specific zone
+    z.object({
+      type: z.literal('zone_count'),
+      side: SideSchema,
+      zone: z.enum(['trash', 'hand', 'deck', 'shield_area']),
+      filter: FilterSchema.optional(),
+      op: ComparisonOpSchema,
+      value: z.number().int(),
+    }),
     z.object({ type: z.literal('coin_flip') }),
     z.object({
       type: z.literal('dice_roll'),

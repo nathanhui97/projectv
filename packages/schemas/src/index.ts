@@ -1,4 +1,5 @@
 export * from './primitives';
+export * from './shorthand-filter';
 export * from './filter';
 export * from './condition';
 export * from './trigger';

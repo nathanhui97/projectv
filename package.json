@@ -4,6 +4,7 @@
   "packageManager": "pnpm@10.33.2",
   "scripts": {
     "dev": "turbo run dev",
+    "dev:admin": "turbo run dev --filter=@project-v/admin --filter=@project-v/schemas",
     "build": "turbo run build",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",

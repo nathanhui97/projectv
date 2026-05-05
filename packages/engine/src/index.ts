@@ -1,5 +1,23 @@
-// Rules engine public API — stubs to be implemented in Weeks 3–4
-// Full spec: docs/08-rules-engine.md
+// Rules engine public API
+
+export type { CardCatalog } from './catalog';
+export { lookupCard, buildCatalog } from './catalog';
+
+export type { EffectiveStats } from './stats';
+export { resolveEffectiveStats, hasKeyword } from './stats';
+
+export type { FilterContext, InstanceLocation } from './filter';
+export {
+  evaluateFilter,
+  evaluateShorthandFilter,
+  normalizeShorthandFilter,
+  findMatchingInstances,
+  findInstanceLocation,
+  allBattleInstances,
+  isLinked,
+} from './filter';
+
+// ─── Engine actions (to be implemented in Weeks 3-4) ─────────────────────────
 
 export function getInitialState(): never {
   throw new Error('Not implemented');
@@ -26,13 +44,5 @@ export function checkWinCondition(): never {
 }
 
 export function listLegalActions(): never {
-  throw new Error('Not implemented');
-}
-
-export function evaluateFilter(): never {
-  throw new Error('Not implemented');
-}
-
-export function rendersTo(): never {
   throw new Error('Not implemented');
 }

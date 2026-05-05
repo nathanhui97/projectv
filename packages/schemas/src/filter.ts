@@ -28,12 +28,16 @@ export type Filter =
   | { is_resting: boolean }
   | { is_active: boolean }
   | { is_damaged: boolean }
+  | { is_token: boolean }
   | { name_is: string }
   | { name_includes: string }
   | { set_code: string | string[] }
   | { card_id: string | string[] }
   | { exclude_self: boolean }
   | { exclude: string[] }
+  // Matches the pilot (or unit) that is paired with the ability's source unit.
+  // At runtime the engine resolves this against source_instance_id.
+  | { paired_with_source: boolean }
   | { all_of: Filter[] }
   | { any_of: Filter[] }
   | { not: Filter };
@@ -58,12 +62,14 @@ export const FilterSchema: z.ZodType<Filter> = z.lazy(() =>
     z.object({ is_resting: z.boolean() }),
     z.object({ is_active: z.boolean() }),
     z.object({ is_damaged: z.boolean() }),
+    z.object({ is_token: z.boolean() }),
     z.object({ name_is: z.string() }),
     z.object({ name_includes: z.string() }),
     z.object({ set_code: z.union([z.string(), z.array(z.string())]) }),
     z.object({ card_id: z.union([z.string(), z.array(z.string())]) }),
     z.object({ exclude_self: z.boolean() }),
     z.object({ exclude: z.array(z.string()) }),
+    z.object({ paired_with_source: z.boolean() }),
     z.object({ all_of: z.array(FilterSchema) }),
     z.object({ any_of: z.array(FilterSchema) }),
     z.object({ not: FilterSchema }),

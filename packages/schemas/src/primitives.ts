@@ -35,10 +35,13 @@ export type Stat = z.infer<typeof StatSchema>;
 export const DurationSchema = z.enum([
   'end_of_turn',
   'end_of_opponent_turn',
+  'end_of_battle',
   'until_end_of_phase',
   'permanent',
   'while_paired',
+  'while_linked',
   'while_in_zone',
+  'until_destroyed',
 ]);
 export type Duration = z.infer<typeof DurationSchema>;
 

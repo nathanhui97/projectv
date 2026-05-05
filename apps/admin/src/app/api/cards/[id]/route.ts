@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { normalizeAbilityFilters } from "@project-v/schemas";
 
 export async function PUT(
   req: NextRequest,
@@ -26,6 +27,7 @@ export async function PUT(
   const now = new Date().toISOString();
   const cardData = {
     ...formData,
+    abilities: (formData.abilities as unknown[] ?? []).map(normalizeAbilityFilters),
     updated_at: now,
     version: (existing?.version ?? 1) + 1,
   };

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { FilterSchema } from './filter';
 import { ConditionSchema } from './condition';
-import { SideSchema, StatSchema, DurationSchema, KeywordInstanceSchema, ZoneSchema } from './primitives';
+import { SideSchema, StatSchema, DurationSchema, KeywordInstanceSchema, ZoneSchema, ColorSchema } from './primitives';
 
 const TargetRefSchema = z.union([
   z.string(),                              // "$buff_target" — stored variable reference
@@ -65,7 +65,20 @@ export const StepSchema: z.ZodType = z.lazy(() =>
       condition: ConditionSchema.optional(),
     }),
     z.object({
-      action: z.literal('deploy_unit'),
+      action: z.literal('exile'),
+      target: TargetRefSchema,
+      condition: ConditionSchema.optional(),
+    }),
+    z.object({
+      action: z.literal('discard_from_hand'),
+      side: SideSchema,
+      amount: z.union([z.number().int().positive(), z.literal('all')]),
+      filter: FilterSchema.optional(),
+      selector: z.enum(['controller_chooses', 'opponent_chooses', 'random']).optional(),
+      condition: ConditionSchema.optional(),
+    }),
+    z.object({
+      action: z.literal('deploy_card'),
       target: TargetRefSchema,
       pay_cost: z.boolean().optional(),
       condition: ConditionSchema.optional(),
@@ -157,6 +170,23 @@ export const StepSchema: z.ZodType = z.lazy(() =>
       condition: ConditionSchema.optional(),
     }),
     z.object({
+      action: z.literal('prevent_ready'),
+      target: TargetRefSchema,
+      duration: DurationSchema,
+      condition: ConditionSchema.optional(),
+    }),
+    z.object({
+      action: z.literal('grant_taunt'),
+      target: TargetRefSchema,
+      duration: DurationSchema,
+      condition: ConditionSchema.optional(),
+    }),
+    z.object({
+      action: z.literal('change_attack_target'),
+      new_target: TargetRefSchema,
+      condition: ConditionSchema.optional(),
+    }),
+    z.object({
       action: z.literal('add_counter'),
       target: TargetRefSchema,
       counter_name: z.string(),
@@ -168,6 +198,31 @@ export const StepSchema: z.ZodType = z.lazy(() =>
       target: TargetRefSchema,
       counter_name: z.string(),
       amount: z.union([z.number().int().positive(), z.literal('all')]),
+      condition: ConditionSchema.optional(),
+    }),
+
+    // --- Cost and resource modification ---
+    z.object({
+      action: z.literal('modify_cost'),
+      target: TargetRefSchema,
+      amount: z.number().int(),
+      duration: DurationSchema,
+      condition: ConditionSchema.optional(),
+    }),
+    z.object({
+      action: z.literal('add_ex_resource'),
+      side: SideSchema,
+      amount: z.number().int().positive(),
+      condition: ConditionSchema.optional(),
+    }),
+
+    // --- Zone queries ---
+    z.object({
+      action: z.literal('count_zone'),
+      side: SideSchema,
+      zone: ZoneSchema,
+      filter: FilterSchema.optional(),
+      store_as: z.string(),
       condition: ConditionSchema.optional(),
     }),
 
@@ -194,10 +249,20 @@ export const StepSchema: z.ZodType = z.lazy(() =>
     // --- Tokens ---
     z.object({
       action: z.literal('create_token'),
-      token_id: z.string(),
-      count: z.number().int().positive(),
+      // Registry-based token (optional when using inline definition)
+      token_id: z.string().optional(),
+      // Inline token definition — used when no token_id registry entry exists
+      name: z.string().optional(),
+      traits: z.array(z.string()).optional(),
+      keywords: z.array(KeywordInstanceSchema).optional(),
+      ap: z.number().int().nonnegative().optional(),
+      hp: z.number().int().nonnegative().optional(),
+      color: ColorSchema.optional(),
+      // Deployment options
+      count: z.number().int().positive().default(1),
       side: SideSchema,
-      zone: ZoneSchema,
+      zone: ZoneSchema.optional(),
+      rest_state: z.enum(['active', 'rested']).optional(),
       condition: ConditionSchema.optional(),
     }),
 

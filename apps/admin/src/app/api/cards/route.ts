@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { normalizeAbilityFilters } from "@project-v/schemas";
 
 export async function POST(req: NextRequest) {
   const supabase = await createAdminClient();
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     updated_at: now,
     version: 1,
     status,
-    abilities: formData.abilities ?? [],
+    abilities: (formData.abilities as unknown[] ?? []).map(normalizeAbilityFilters),
     keywords: formData.keywords ?? [],
     traits: formData.traits ?? [],
     format_legality: {},

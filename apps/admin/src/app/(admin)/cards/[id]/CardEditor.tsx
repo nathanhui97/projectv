@@ -63,7 +63,7 @@ type DbCard = {
 type Trait = { slug: string; display_name: string };
 
 function cardToFormValues(card: DbCard): CardFormValues {
-  const d = card.data as Record<string, unknown>;
+  const d = (card.data ?? {}) as Record<string, unknown>;
   return {
     id: card.id,
     set_code: card.set_code,
