@@ -65,6 +65,7 @@ function makeState(p0Units: CardInstance[], p1Units: CardInstance[] = []): GameS
       removed_from_game: emptyZone,
     },
     has_redrawn: false,
+    has_placed_resource_this_turn: false,
     abilities_used_this_turn: [],
   });
   return {
@@ -75,10 +76,12 @@ function makeState(p0Units: CardInstance[], p1Units: CardInstance[] = []): GameS
     active_player_index: 0,
     turn_number: 1,
     phase: 'main',
+    attack_substate: null,
     priority_player_index: 0,
     pending_resolutions: [],
     units_attacked_this_turn: [],
     abilities_triggered_once_per_turn: [],
+    log: [],
     action_sequence_number: 0,
   } as GameState;
 }

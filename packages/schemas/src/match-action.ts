@@ -7,8 +7,8 @@ export const MatchActionSchema = z.object({
   type: z.enum([
     'redraw', 'keep_hand',
     'place_resource', 'skip_resource',
-    'deploy_unit', 'pair_pilot',
-    'play_command', 'deploy_base',
+    'deploy_card', 'pair_pilot',
+    'play_command',
     'attack_player', 'attack_unit', 'attack_base',
     'use_blocker', 'skip_blocker',
     'activate_ability',

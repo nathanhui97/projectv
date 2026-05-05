@@ -41,6 +41,7 @@ const FORMAL_ONLY_KEYS = new Set([
   'has_any_keyword', 'is_resting',
   'set_code', 'card_id',
   'exclude', 'exclude_self',
+  'paired_with_source',           // runtime-context filter, always formal
 ]);
 
 function shorthandToFilter(f: ShorthandFilter): Filter {
